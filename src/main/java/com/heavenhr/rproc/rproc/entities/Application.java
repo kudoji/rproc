@@ -28,10 +28,12 @@ public class Application {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private int id;
 
+    @NotNull(message = "Candidate email cannot be empty")
     @Email(message = "Candidate email is invalid")
     @Column(nullable = false)
     private String email;
 
+    //TODO make it as a file link
     @NotBlank(message = "Resume cannot be empty")
     private String resume;
 
@@ -79,5 +81,15 @@ public class Application {
         log.info("preRemove() is called for application '{}'", this);
 
         setOffer(null);
+    }
+
+    /**
+     * avoid StackOverflowError due to lombok behaviour
+     *
+     * @return
+     */
+    @Override
+    public String toString(){
+        return "" + this.email + " #" + this.id;
     }
 }
