@@ -12,6 +12,7 @@ import lombok.Setter;
 import javax.persistence.*;
 import javax.validation.constraints.*;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -38,7 +39,7 @@ public class Offer {
 
     @OneToMany(mappedBy = "offer", cascade = CascadeType.PERSIST)
     @Setter(AccessLevel.NONE)
-    private List<Application> applications;
+    private List<Application> applications = new ArrayList<>();
 
     @PrePersist
     private void prePersist(){
