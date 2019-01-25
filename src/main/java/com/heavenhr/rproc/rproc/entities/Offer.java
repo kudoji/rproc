@@ -53,4 +53,18 @@ public class Offer {
     public int getNumberOfApplications(){
         return applications.size();
     }
+
+    @Override
+    public int hashCode(){
+        return this.id;
+    }
+
+    @Override
+    public boolean equals(Object obj){
+        if (!(obj instanceof Offer)) return false;
+
+        Offer offer = (Offer)obj;
+
+        return (this.id > 0) & (this.id == offer.id);
+    }
 }
