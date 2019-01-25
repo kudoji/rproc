@@ -4,6 +4,7 @@
 package com.heavenhr.rproc.rproc.entities;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -37,6 +38,7 @@ public class Offer {
     @Transient
     private int numberOfApplications = 0;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "offer", cascade = CascadeType.PERSIST)
     @Setter(AccessLevel.NONE)
     private List<Application> applications = new ArrayList<>();
@@ -46,5 +48,9 @@ public class Offer {
         if (startDate == null){
             startDate = LocalDate.now();
         }
+    }
+
+    public int getNumberOfApplications(){
+        return applications.size();
     }
 }
