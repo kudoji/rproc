@@ -106,6 +106,52 @@ public class OfferControllerTest {
     }
 
     @Test
+    public void testGetNumberOfApplicationsTotal() throws Exception{
+        when(applicationRepository.findAll()).thenReturn(Arrays.asList(application, application2));
+
+        mockMvc.perform(
+                get("/offers/apps_total")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.apps_total", is(2)));
+    }
+
+    @Test
+    public void testGetNumberOfApplicationsPerOffer() throws Exception{
+        when(offerRepository.findById(1)).thenReturn(Optional.of(offer));
+        when(applicationRepository.findAllByOffer(offer)).thenReturn(Arrays.asList(application, application2));
+
+        mockMvc.perform(
+                get("/offers/1/apps_total")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.apps_total", is(2)));
+    }
+
+    @Test
+    public void testGetNumberOfApplicationsPerOfferWithNoApplications() throws Exception{
+        when(offerRepository.findById(1)).thenReturn(Optional.of(offer));
+        when(applicationRepository.findAllByOffer(offer)).thenReturn(Arrays.asList());
+
+        mockMvc.perform(
+                get("/offers/1/apps_total")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.apps_total", is(0)));
+    }
+
+    @Test
+    public void testGetNumberOfApplicationsPerOfferInvalidOfferId() throws Exception{
+        when(offerRepository.findById(1)).thenReturn(Optional.empty());
+
+        mockMvc.perform(
+                get("/offers/1/apps_total")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorMessage", containsString("Error: offer with #")));
+    }
+
+    @Test
     public void testGetOfferByIdWithValidId() throws Exception{
         when(offerRepository.findById(1)).thenReturn(Optional.of(offer));
 

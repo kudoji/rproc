@@ -14,7 +14,11 @@ import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 @RestController
 @RequestMapping(path = "/offers", produces = "application/json")
@@ -35,6 +39,31 @@ public class OfferController {
     @GetMapping(path = "/all")
     public Iterable<Offer> allOffers(){
         return offerRepository.findAll();
+    }
+
+    @GetMapping(path = "/apps_total")
+    public Map<String, Long> getNumberOfApplicationsTotal(){
+        long total = StreamSupport.stream(applicationRepository.findAll().spliterator(), false).count();
+
+        return new HashMap<String, Long>(){{put("apps_total", total);}};
+    }
+
+    @GetMapping(path = "/{offerId:[\\d]+}/apps_total")
+    public ResponseEntity<?> getNumberOfApplicationsPerOffer(@PathVariable(value = "offerId") int offerId){
+        Optional<Offer> optionalOffer = offerRepository.findById(offerId);
+        if (optionalOffer.isPresent()){
+            long total = StreamSupport.stream(
+                        applicationRepository.findAllByOffer(optionalOffer.get()).spliterator(),
+                        false)
+                    .count();
+
+            return ResponseEntity.ok(new HashMap<String, Long>(){{put("apps_total", total);}});
+        }
+
+        return ResponseEntity.badRequest().body(
+                ErrorResponse.buildFromErrorMessage(
+                        "Error: offer with #%d not found",
+                        offerId));
     }
 
     @GetMapping(path = "/{offerId:[\\d]+}")
