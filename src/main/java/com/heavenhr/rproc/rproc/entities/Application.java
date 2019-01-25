@@ -4,7 +4,6 @@
 package com.heavenhr.rproc.rproc.entities;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.heavenhr.rproc.rproc.controllers.ApplicationStatusHistory;
 import com.heavenhr.rproc.rproc.enums.ApplicationStatus;
 import lombok.AccessLevel;
 import lombok.Data;
@@ -33,7 +32,7 @@ public class Application {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private int id;
 
-    @NotNull(message = "Candidate email cannot be empty")
+    @NotBlank(message = "Candidate email cannot be empty")
     @Email(message = "Candidate email is invalid")
     @Column(nullable = false)
     private String email;
