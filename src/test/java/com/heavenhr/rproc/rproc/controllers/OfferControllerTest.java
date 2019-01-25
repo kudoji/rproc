@@ -4,7 +4,10 @@
 package com.heavenhr.rproc.rproc.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.heavenhr.rproc.rproc.entities.Application;
 import com.heavenhr.rproc.rproc.entities.Offer;
+import com.heavenhr.rproc.rproc.enums.ApplicationStatus;
+import com.heavenhr.rproc.rproc.repositories.ApplicationRepository;
 import com.heavenhr.rproc.rproc.repositories.OfferRepository;
 import org.junit.Before;
 import org.junit.Test;
@@ -40,10 +43,14 @@ public class OfferControllerTest {
     @MockBean
     private OfferRepository offerRepository;
 
+    @MockBean
+    private ApplicationRepository applicationRepository;
+
     @Autowired
     private ObjectMapper objectMapper;
 
-    private Offer offer;
+    private Offer offer, offer2;
+    private Application application, application2;
 
     private List<Offer> getOffers(){
         Offer offer1 = new Offer();
@@ -70,6 +77,20 @@ public class OfferControllerTest {
                 LocalDate.now().getMonth().getValue() + 1,
                 23));
         offer.setJobTitle("job title");
+
+        application = new Application();
+        application.setId(1);
+        application.setOffer(offer);
+        application.setApplicationStatus(ApplicationStatus.APPLIED);
+        application.setEmail("email@email.com");
+        application.setResume("resume");
+
+        offer2 = new Offer();
+        offer2.setId(2);
+
+        application2 = new Application();
+        application2.setId(2);
+        application2.setOffer(offer2);
     }
 
     @Test
@@ -103,6 +124,77 @@ public class OfferControllerTest {
 
         mockMvc.perform(
                 get("/offers/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorMessage", containsString("Error: offer with #")));
+    }
+
+    @Test
+    public void testGetApplicationForOfferValid() throws Exception{
+        when(offerRepository.findById(1)).thenReturn(Optional.of(offer));
+        when(applicationRepository.findById(1)).thenReturn(Optional.of(application));
+
+        mockMvc.perform(
+                get("/offers/1/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(application.getId())))
+                .andExpect(jsonPath("$.email", is(application.getEmail())))
+                .andExpect(jsonPath("$.resume", is(application.getResume())))
+                .andExpect(jsonPath("$.applicationStatus", is(application.getApplicationStatus().toString())));
+
+    }
+
+    @Test
+    public void testGetApplicationForOfferInvalidApplication() throws Exception{
+        when(offerRepository.findById(1)).thenReturn(Optional.of(offer));
+        when(applicationRepository.findById(1)).thenReturn(Optional.empty());
+
+        mockMvc.perform(
+                get("/offers/1/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorMessage", containsString("Error: application with #")));
+
+    }
+
+    @Test
+    public void testGetApplicationForOfferValidApplicationFromOtherOffer() throws Exception{
+        when(offerRepository.findById(1)).thenReturn(Optional.of(offer));
+        when(offerRepository.findById(2)).thenReturn(Optional.of(offer2));
+
+        when(applicationRepository.findById(1)).thenReturn(Optional.of(application));
+        when(applicationRepository.findById(2)).thenReturn(Optional.of(application2));
+
+        when(applicationRepository.findByIdAndOffer(2, offer)).thenReturn(Optional.empty());
+
+        mockMvc.perform(
+                get("/offers/1/2")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorMessage", containsString("Error: application with #")));
+
+    }
+
+    @Test
+    public void testAllApplicationsPerOffersValid() throws Exception{
+        when(offerRepository.findById(1)).thenReturn(Optional.of(offer));
+        when(applicationRepository.findAllByOffer(offer)).thenReturn(Arrays.asList(application));
+
+        mockMvc.perform(
+                get("/offers/1/all")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].email", is(application.getEmail())));
+    }
+
+    @Test
+    public void testAllApplicationsPerOffersInvalidOffer() throws Exception{
+        when(offerRepository.findById(1)).thenReturn(Optional.empty());
+
+        mockMvc.perform(
+                get("/offers/1/all")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorMessage", containsString("Error: offer with #")));
