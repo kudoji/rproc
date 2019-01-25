@@ -169,4 +169,18 @@ public class Application {
     public String toString(){
         return "" + this.email + " #" + this.id;
     }
+
+    @Override
+    public int hashCode(){
+        return this.id;
+    }
+
+    @Override
+    public boolean equals(Object obj){
+        if (!(obj instanceof Application)) return false;
+
+        Application application = (Application)obj;
+
+        return (this.id > 0) & (this.id == application.id);
+    }
 }
