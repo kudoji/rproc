@@ -5,8 +5,10 @@ package com.heavenhr.rproc.rproc.controllers;
 
 import com.heavenhr.rproc.rproc.entities.Application;
 import com.heavenhr.rproc.rproc.entities.Offer;
+import com.heavenhr.rproc.rproc.enums.ApplicationStatus;
 import com.heavenhr.rproc.rproc.repositories.ApplicationRepository;
 import com.heavenhr.rproc.rproc.repositories.OfferRepository;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -21,6 +23,7 @@ import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+@Slf4j
 @RestController
 @RequestMapping(path = "/offers", produces = MediaType.APPLICATION_JSON_VALUE)
 @CrossOrigin(origins = "*")
@@ -153,5 +156,55 @@ public class OfferController {
         }
 
         return ResponseEntity.status(HttpStatus.CREATED).body(applicationRepository.save(application));
+    }
+
+    @PatchMapping(path = "/app/{appId:[\\d]+}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> patchApplication(
+            @PathVariable(value = "appId") int appId,
+            @RequestBody Map<String, String> applicationPatch
+    ){
+        Optional<Application> optionalApplication = applicationRepository.findById(appId);
+        if (!optionalApplication.isPresent()) {
+            return ResponseEntity.badRequest().body(
+                    ErrorResponse.buildFromErrorMessage(
+                            "Error: application with #%d not found",
+                            appId));
+        }
+
+        Application application = optionalApplication.get();
+
+        boolean doSave = false;
+        String applicationStatus = applicationPatch.getOrDefault("applicationStatus", null);
+        log.info(
+                "requested applicationStatus patch from '{}' to '{}'",
+                application.getApplicationStatus().toString(),
+                applicationStatus);
+        if (applicationStatus != null){
+            try{
+                application.setApplicationStatus(ApplicationStatus.valueOf(applicationStatus));
+
+                doSave = true;
+            }catch (IllegalArgumentException e){
+                return ResponseEntity.badRequest().body(
+                        ErrorResponse.buildFromErrorMessage(e.getMessage())
+                );
+            }
+        }
+
+        if (!doSave){
+            return ResponseEntity.badRequest().body(
+                    ErrorResponse.buildFromErrorMessage("nothing to patch")
+            );
+        }
+
+        offerRepository.save(application.getOffer());
+        log.info(
+                "saving application '{}' with {} history items",
+                application,
+                application.getApplicationStatusHistories().size());
+        applicationRepository.save(application);
+
+        applicationPatch.put("status", "updated");
+        return ResponseEntity.ok(applicationPatch);
     }
 }

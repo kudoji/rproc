@@ -21,12 +21,15 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -288,5 +291,21 @@ public class OfferControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorMessage", containsString("Validation failed due to")))
                 .andExpect(jsonPath("$.errors").exists());
+    }
+
+    @Test
+    public void testPatchApplicationValid() throws Exception{
+        when(applicationRepository.findById(1)).thenReturn(Optional.of(application));
+
+        Map<String, String> patch = new HashMap<>();
+        patch.put("applicationStatus", ApplicationStatus.INVITED.toString());
+
+        mockMvc.perform(
+                patch("/offers/app/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(patch))
+                )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status", is("updated")));
     }
 }

@@ -18,6 +18,7 @@ import javax.validation.Validation;
 import javax.validation.Validator;
 import javax.validation.ValidatorFactory;
 
+import static junit.framework.TestCase.assertNull;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -75,14 +76,15 @@ public class ApplicationTest {
         assertValidation.assertNoErrorValidation(application, "email");
     }
 
-    @Test
-    public void testApplicationStatus(){
-        Application application = new Application();
-        assertValidation.assertErrorValidation(application, "applicationStatus", "Application status cannot be empty");
-
-        application.setApplicationStatus(ApplicationStatus.APPLIED);
-        assertValidation.assertNoErrorValidation(application, "applicationStatus");
-    }
+    //  status can be null, hibernate's PrePersist takes cake
+//    @Test
+//    public void testApplicationStatus(){
+//        Application application = new Application();
+//        assertValidation.assertErrorValidation(application, "applicationStatus", "Application status cannot be empty");
+//
+//        application.setApplicationStatus(ApplicationStatus.APPLIED);
+//        assertValidation.assertNoErrorValidation(application, "applicationStatus");
+//    }
 
     @Test
     public void testOffer(){
@@ -99,13 +101,16 @@ public class ApplicationTest {
     @Test
     public void testSetOffer(){
         Offer offer = new Offer();
+        offer.setId(1);
         assertEquals(0, offer.getApplications().size());
 
         Application application1 = new Application();
+        application1.setId(1);
         application1.setOffer(offer);
         assertEquals(1, offer.getApplications().size());
 
         Application application2 = new Application();
+        application2.setId(2);
         application2.setOffer(offer);
         assertEquals(2, offer.getApplications().size());
         assertTrue(offer.getApplications().contains(application1));
@@ -136,6 +141,9 @@ public class ApplicationTest {
         assertNotNull(offerId);
         assertTrue(offerId > 0);
 
+        Offer offerTest = testEntityManager.find(Offer.class, offerId);
+        assertEquals(2, offerTest.getApplications().size());
+
         Integer applicationId1 = testEntityManager.getId(application1, Integer.class);
         assertNotNull(applicationId1);
         assertTrue(applicationId1 > 0);
@@ -149,6 +157,74 @@ public class ApplicationTest {
 
         applicationTest = testEntityManager.find(Application.class, applicationId2);
         assertEquals(email2, applicationTest.getEmail());
+    }
+
+    @Test
+    public void testSetApplicationStatusRoute1(){
+        Application application = new Application();
+        assertNull(application.getApplicationStatus());
+        assertEquals(0, application.getApplicationStatusHistories().size());
+
+        application.setApplicationStatus(ApplicationStatus.APPLIED);
+        assertEquals(ApplicationStatus.APPLIED, application.getApplicationStatus());
+        assertEquals(1, application.getApplicationStatusHistories().size());
+
+        application.setApplicationStatus(ApplicationStatus.INVITED);
+        assertEquals(ApplicationStatus.INVITED, application.getApplicationStatus());
+        assertEquals(2, application.getApplicationStatusHistories().size());
+
+        application.setApplicationStatus(ApplicationStatus.HIRED);
+        assertEquals(ApplicationStatus.HIRED, application.getApplicationStatus());
+        assertEquals(3, application.getApplicationStatusHistories().size());
+    }
+
+    @Test
+    public void testSetApplicationStatusRoute2(){
+        Application application = new Application();
+        assertNull(application.getApplicationStatus());
+        assertEquals(0, application.getApplicationStatusHistories().size());
+
+        application.setApplicationStatus(ApplicationStatus.APPLIED);
+        assertEquals(ApplicationStatus.APPLIED, application.getApplicationStatus());
+        assertEquals(1, application.getApplicationStatusHistories().size());
+
+        application.setApplicationStatus(ApplicationStatus.INVITED);
+        assertEquals(ApplicationStatus.INVITED, application.getApplicationStatus());
+        assertEquals(2, application.getApplicationStatusHistories().size());
+
+        application.setApplicationStatus(ApplicationStatus.REJECTED);
+        assertEquals(ApplicationStatus.REJECTED, application.getApplicationStatus());
+        assertEquals(3, application.getApplicationStatusHistories().size());
+    }
+
+
+    @Test
+    public void testSetApplicationStatusRoute3(){
+        Application application = new Application();
+        assertNull(application.getApplicationStatus());
+        assertEquals(0, application.getApplicationStatusHistories().size());
+
+        application.setApplicationStatus(ApplicationStatus.APPLIED);
+        assertEquals(ApplicationStatus.APPLIED, application.getApplicationStatus());
+        assertEquals(1, application.getApplicationStatusHistories().size());
+
+        application.setApplicationStatus(ApplicationStatus.REJECTED);
+        assertEquals(ApplicationStatus.REJECTED, application.getApplicationStatus());
+        assertEquals(2, application.getApplicationStatusHistories().size());
+    }
+
+    @Test
+    public void testPrePersist(){
+        createEntities();
+
+        Application application = new Application();
+        application.setOffer(offer);
+        application.setEmail("email@mail.com");
+        application.setResume("resume text");
+
+        assertEquals(0, application.getApplicationStatusHistories().size());
+        testEntityManager.persistAndFlush(offer);
+        assertEquals(1, application.getApplicationStatusHistories().size());
     }
 
     @Test
