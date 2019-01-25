@@ -21,11 +21,8 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Optional;
 
-import static net.bytebuddy.matcher.ElementMatchers.isArray;
-import static org.assertj.core.api.Assertions.not;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.mockito.Mockito.when;
@@ -51,21 +48,6 @@ public class OfferControllerTest {
 
     private Offer offer, offer2;
     private Application application, application2;
-
-    private List<Offer> getOffers(){
-        Offer offer1 = new Offer();
-        offer1.setJobTitle("job title 1");
-
-        Offer offer2 = new Offer();
-        offer2.setJobTitle("job title 2");
-
-        List<Offer> offers = Arrays.asList(
-            offer1,
-            offer2
-        );
-
-        return offers;
-    }
 
     @Before
     public void beforeTest(){
@@ -178,7 +160,7 @@ public class OfferControllerTest {
     @Test
     public void testGetApplicationForOfferValid() throws Exception{
         when(offerRepository.findById(1)).thenReturn(Optional.of(offer));
-        when(applicationRepository.findById(1)).thenReturn(Optional.of(application));
+        when(applicationRepository.findByIdAndOffer(1, offer)).thenReturn(Optional.of(application));
 
         mockMvc.perform(
                 get("/offers/1/1")
@@ -270,6 +252,38 @@ public class OfferControllerTest {
                 post("/offers")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(offerInvalid))
+        )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorMessage", containsString("Validation failed due to")))
+                .andExpect(jsonPath("$.errors").exists());
+    }
+
+    @Test
+    public void testSubmitApplicationValid() throws Exception{
+        when(offerRepository.findById(1)).thenReturn(Optional.of(offer));
+        when(applicationRepository.save(application)).thenReturn(application);
+
+        mockMvc.perform(
+                post("/offers/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(application))
+        )
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.email", is(application.getEmail())))
+                .andExpect(jsonPath("$.resume", is(application.getResume())))
+                .andExpect(jsonPath("$.applicationStatus", is(application.getApplicationStatus().toString())));
+    }
+
+    @Test
+    public void testSubmitApplicationInvalid() throws Exception{
+        when(offerRepository.findById(1)).thenReturn(Optional.of(offer));
+
+        Application applicationInvalid = new Application();
+
+        mockMvc.perform(
+                post("/offers/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(applicationInvalid))
         )
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorMessage", containsString("Validation failed due to")))
