@@ -1,15 +1,13 @@
 /**
  * @author kudoji
  */
-package com.heavenhr.rproc.rproc.controllers;
+package com.heavenhr.rproc.rproc.entities;
 
-import com.heavenhr.rproc.rproc.entities.Application;
 import com.heavenhr.rproc.rproc.enums.ApplicationStatus;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 
 import javax.persistence.*;
-import javax.validation.constraints.FutureOrPresent;
 import javax.validation.constraints.NotNull;
 import java.time.LocalDateTime;
 
