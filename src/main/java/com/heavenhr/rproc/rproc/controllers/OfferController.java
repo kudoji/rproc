@@ -9,6 +9,7 @@ import com.heavenhr.rproc.rproc.repositories.ApplicationRepository;
 import com.heavenhr.rproc.rproc.repositories.OfferRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
@@ -21,7 +22,7 @@ import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 @RestController
-@RequestMapping(path = "/offers", produces = "application/json")
+@RequestMapping(path = "/offers", produces = MediaType.APPLICATION_JSON_VALUE)
 @CrossOrigin(origins = "*")
 public class OfferController {
     private final OfferRepository offerRepository;
@@ -117,7 +118,7 @@ public class OfferController {
                         offerId));
     }
 
-    @PostMapping(consumes = "application/json")
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> submitOffer(
             @Valid @RequestBody Offer offer,
             Errors errors){
@@ -129,5 +130,28 @@ public class OfferController {
         }
 
         return ResponseEntity.status(HttpStatus.CREATED).body(offerRepository.save(offer));
+    }
+
+    @PostMapping(path = "/{offerId:[\\d]+}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> submitApplication(
+            @PathVariable(value = "offerId") int offerId,
+            @Valid @RequestBody Application application,
+            Errors errors
+    ) {
+        Optional<Offer> optionalOffer = offerRepository.findById(offerId);
+        if (!optionalOffer.isPresent()) {
+            return ResponseEntity.badRequest().body(
+                    ErrorResponse.buildFromErrorMessage(
+                            "Error: offer with #%d not found",
+                            offerId));
+        }
+
+        if (errors.hasErrors()) {
+            return ResponseEntity.badRequest().body(
+                    ErrorResponse.buildFromErrors(errors)
+            );
+        }
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(applicationRepository.save(application));
     }
 }
