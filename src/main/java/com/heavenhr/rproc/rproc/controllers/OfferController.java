@@ -7,6 +7,7 @@ import com.heavenhr.rproc.rproc.entities.Application;
 import com.heavenhr.rproc.rproc.entities.ApplicationPartial;
 import com.heavenhr.rproc.rproc.entities.Offer;
 import com.heavenhr.rproc.rproc.enums.ApplicationStatus;
+import com.heavenhr.rproc.rproc.messaging.RabbitNotificationService;
 import com.heavenhr.rproc.rproc.repositories.ApplicationRepository;
 import com.heavenhr.rproc.rproc.repositories.OfferRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -31,6 +32,9 @@ import java.util.stream.StreamSupport;
 public class OfferController {
     private final OfferRepository offerRepository;
     private final ApplicationRepository applicationRepository;
+
+    @Autowired
+    private RabbitNotificationService rabbitNotificationService;
 
     @Autowired
     public OfferController(
@@ -275,6 +279,7 @@ public class OfferController {
                 application.getApplicationStatusHistories().size());
         applicationRepository.save(application);
 
+        rabbitNotificationService.sendNotification(application);
         applicationPatch.put("status", "updated");
         return ResponseEntity.ok(applicationPatch);
     }

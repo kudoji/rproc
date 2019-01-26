@@ -8,6 +8,7 @@ The service is built on Java and uses the following auxiliary technologies:
 
 * Spring Boot 2.1.2;
 * Hibernate + H2 database
+* RabbitMQ
 * lombok 1.18.4
 
 ___
@@ -28,6 +29,8 @@ ___
         1. [get total number of applications for an offer](#app-offer-total)
     1. [application statuses](#app-status)
         1. [progress the status of an application](#app-status-progress)
+1. [**known issues**](#issues)
+1. [**RabbitMQ server installation**](#rabbitmq)
 
 
 ___
@@ -381,3 +384,24 @@ if status is invalid or out of the listed above scenarios;
     }
 
 if application with the id \[**appId**] does not exist.
+
+    Each successful status change triggers a notification.
+    Each notification is put into rabbitmq queue with routing-key "heavenhr.rproc.application.queue"
+
+    Note: to make this functionality work correctly you need RabbitMQ server installed.
+
+
+<a name="issues"></a>
+### known issues
+[back](#toc)
+
+
+<a name="rabbitmq"></a>
+### RabbitMQ server installation
+[back](#toc)
+
+The easiest way installing RabbitMQ is to use docker image.
+
+    docker run --rm --publish 5672:5672 --name rabbit rabbitmq:alpine
+
+After running the docker image, configure **spring.rabbitmq.host** in **application.properties** file.
