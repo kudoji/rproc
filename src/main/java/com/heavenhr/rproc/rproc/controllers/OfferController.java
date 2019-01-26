@@ -4,6 +4,7 @@
 package com.heavenhr.rproc.rproc.controllers;
 
 import com.heavenhr.rproc.rproc.entities.Application;
+import com.heavenhr.rproc.rproc.entities.ApplicationPartial;
 import com.heavenhr.rproc.rproc.entities.Offer;
 import com.heavenhr.rproc.rproc.enums.ApplicationStatus;
 import com.heavenhr.rproc.rproc.repositories.ApplicationRepository;
@@ -135,10 +136,18 @@ public class OfferController {
         return ResponseEntity.status(HttpStatus.CREATED).body(offerRepository.save(offer));
     }
 
+    /**
+     * Create an application with post(/offers/{offerId})
+     *
+     * @param offerId
+     * @param applicationPartial
+     * @param errors
+     * @return
+     */
     @PostMapping(path = "/{offerId:[\\d]+}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> submitApplication(
             @PathVariable(value = "offerId") int offerId,
-            @Valid @RequestBody Application application,
+            @Valid @RequestBody ApplicationPartial applicationPartial,
             Errors errors
     ) {
         Optional<Offer> optionalOffer = offerRepository.findById(offerId);
@@ -155,7 +164,21 @@ public class OfferController {
             );
         }
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(applicationRepository.save(application));
+        Application application = new Application(applicationPartial);
+        application.setOffer(optionalOffer.get());
+        boolean constrainError = false;
+        try{
+            application = applicationRepository.save(application);
+        }catch (org.springframework.dao.DataIntegrityViolationException e){
+            constrainError = true;
+        }
+        if (constrainError){
+            return ResponseEntity.badRequest().body(
+                    ErrorResponse.buildFromErrorMessage("candidate is already submitted resume for the offer")
+            );
+        }
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(applicationPartial);
     }
 
     @PatchMapping(path = "/app/{appId:[\\d]+}", consumes = MediaType.APPLICATION_JSON_VALUE)

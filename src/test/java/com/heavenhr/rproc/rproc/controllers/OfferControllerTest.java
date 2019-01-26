@@ -5,6 +5,7 @@ package com.heavenhr.rproc.rproc.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.heavenhr.rproc.rproc.entities.Application;
+import com.heavenhr.rproc.rproc.entities.ApplicationPartial;
 import com.heavenhr.rproc.rproc.entities.Offer;
 import com.heavenhr.rproc.rproc.enums.ApplicationStatus;
 import com.heavenhr.rproc.rproc.repositories.ApplicationRepository;
@@ -266,22 +267,23 @@ public class OfferControllerTest {
         when(offerRepository.findById(1)).thenReturn(Optional.of(offer));
         when(applicationRepository.save(application)).thenReturn(application);
 
+        ApplicationPartial applicationPartial = new ApplicationPartial(application);
+
         mockMvc.perform(
                 post("/offers/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(application))
+                        .content(objectMapper.writeValueAsString(applicationPartial))
         )
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.email", is(application.getEmail())))
-                .andExpect(jsonPath("$.resume", is(application.getResume())))
-                .andExpect(jsonPath("$.applicationStatus", is(application.getApplicationStatus().toString())));
+                .andExpect(jsonPath("$.resume", is(application.getResume())));
     }
 
     @Test
     public void testSubmitApplicationInvalid() throws Exception{
         when(offerRepository.findById(1)).thenReturn(Optional.of(offer));
 
-        Application applicationInvalid = new Application();
+        ApplicationPartial applicationInvalid = new ApplicationPartial();
 
         mockMvc.perform(
                 post("/offers/1")

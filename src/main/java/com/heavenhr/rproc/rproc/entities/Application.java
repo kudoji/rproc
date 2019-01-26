@@ -55,6 +55,15 @@ public class Application {
     private List<ApplicationStatusHistory> applicationStatusHistories = new ArrayList<>();
 
     /**
+     * Creates Application instance from ApplicationPartial
+     *
+     * @param applicationPartial
+     */
+    public Application(ApplicationPartial applicationPartial){
+        this.email = applicationPartial.getEmail();
+        this.resume = applicationPartial.getResume();
+    }
+    /**
      *
      * @param offer if null removes previous link
      */
