@@ -8,6 +8,7 @@ import com.heavenhr.rproc.rproc.entities.Application;
 import com.heavenhr.rproc.rproc.entities.ApplicationPartial;
 import com.heavenhr.rproc.rproc.entities.Offer;
 import com.heavenhr.rproc.rproc.enums.ApplicationStatus;
+import com.heavenhr.rproc.rproc.messaging.RabbitNotificationService;
 import com.heavenhr.rproc.rproc.repositories.ApplicationRepository;
 import com.heavenhr.rproc.rproc.repositories.OfferRepository;
 import org.junit.Before;
@@ -46,6 +47,9 @@ public class OfferControllerTest {
 
     @MockBean
     private ApplicationRepository applicationRepository;
+
+    @MockBean
+    private RabbitNotificationService rabbitNotificationService;
 
     @Autowired
     private ObjectMapper objectMapper;
