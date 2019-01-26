@@ -41,11 +41,20 @@ public class OfferController {
         this.applicationRepository = applicationRepository;
     }
 
+    /**
+     * get list of all offers.  GET /offers/all
+     * @return
+     */
     @GetMapping(path = "/all")
     public Iterable<Offer> allOffers(){
         return offerRepository.findAll();
     }
 
+    /**
+     * get the total number of applications. GET /offers/apps_total
+     *
+     * @return
+     */
     @GetMapping(path = "/apps_total")
     public Map<String, Long> getNumberOfApplicationsTotal(){
         long total = StreamSupport.stream(applicationRepository.findAll().spliterator(), false).count();
@@ -53,6 +62,12 @@ public class OfferController {
         return new HashMap<String, Long>(){{put("apps_total", total);}};
     }
 
+    /**
+     * get the total number of applications for an offer. GET /offers/[offerId]/apps_total
+     *
+     * @param offerId
+     * @return
+     */
     @GetMapping(path = "/{offerId:[\\d]+}/apps_total")
     public ResponseEntity<?> getNumberOfApplicationsPerOffer(@PathVariable(value = "offerId") int offerId){
         Optional<Offer> optionalOffer = offerRepository.findById(offerId);
@@ -71,6 +86,12 @@ public class OfferController {
                         offerId));
     }
 
+    /**
+     * read a single offer. GET /offers/[id]
+     *
+     * @param offerId
+     * @return
+     */
     @GetMapping(path = "/{offerId:[\\d]+}")
     public ResponseEntity<?> getOfferById(@PathVariable(value = "offerId") int offerId){
         Optional<Offer> optionalOffer = offerRepository.findById(offerId);
@@ -84,6 +105,12 @@ public class OfferController {
                         offerId));
     }
 
+    /**
+     * get list of all applications for an offer. GET /offers/[offerId]/all
+     *
+     * @param offerId
+     * @return
+     */
     @GetMapping(path = "/{offerId:[\\d]+}/all")
     public ResponseEntity<?> allApplicationsPerOffers(@PathVariable(value = "offerId") int offerId){
         Optional<Offer> optionalOffer = offerRepository.findById(offerId);
@@ -97,6 +124,13 @@ public class OfferController {
                         offerId));
     }
 
+    /**
+     * read a single application for an offer. GET /offers/[offerId]/[appId]
+     *
+     * @param offerId
+     * @param appId
+     * @return
+     */
     @GetMapping(path = "/{offerId:[\\d]+}/{appId:[\\d]+}")
     public ResponseEntity<?> getApplicationForOffer(
             @PathVariable(value = "offerId") int offerId,
@@ -122,6 +156,13 @@ public class OfferController {
                         offerId));
     }
 
+    /**
+     * creates an offer. POST /offers
+     *
+     * @param offer
+     * @param errors
+     * @return
+     */
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> submitOffer(
             @Valid @RequestBody Offer offer,
@@ -137,7 +178,7 @@ public class OfferController {
     }
 
     /**
-     * Create an application with post(/offers/{offerId})
+     * create an application. POST /offers/{offerId}
      *
      * @param offerId
      * @param applicationPartial
@@ -181,6 +222,13 @@ public class OfferController {
         return ResponseEntity.status(HttpStatus.CREATED).body(applicationPartial);
     }
 
+    /**
+     * progress application status. PATCH /offers/app/[appId]
+     *
+     * @param appId
+     * @param applicationPatch
+     * @return
+     */
     @PatchMapping(path = "/app/{appId:[\\d]+}", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> patchApplication(
             @PathVariable(value = "appId") int appId,
