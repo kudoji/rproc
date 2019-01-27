@@ -188,7 +188,7 @@ public class OfferController {
     }
 
     /**
-     * create an application. POST /offers/{offerId}
+     * create an application. POST /offers/[offerId]
      *
      * @param offerId
      * @param applicationPartial
