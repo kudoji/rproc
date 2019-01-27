@@ -7,10 +7,14 @@ import com.heavenhr.rproc.rproc.entities.Application;
 import com.heavenhr.rproc.rproc.entities.ApplicationPartial;
 import com.heavenhr.rproc.rproc.entities.Offer;
 import com.heavenhr.rproc.rproc.enums.ApplicationStatus;
+import com.heavenhr.rproc.rproc.exceptions.ApplicationAlreadySubmittedException;
+import com.heavenhr.rproc.rproc.exceptions.ApplicationNotFoundException;
+import com.heavenhr.rproc.rproc.exceptions.OfferNotFoundException;
 import com.heavenhr.rproc.rproc.messaging.RabbitNotificationService;
 import com.heavenhr.rproc.rproc.repositories.ApplicationRepository;
 import com.heavenhr.rproc.rproc.repositories.OfferRepository;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.AmqpException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -21,7 +25,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.StreamSupport;
 
 @Slf4j
@@ -73,20 +76,14 @@ public class OfferController {
      */
     @GetMapping(path = "/{offerId:[\\d]+}/apps_total")
     public ResponseEntity<?> getNumberOfApplicationsPerOffer(@PathVariable(value = "offerId") int offerId){
-        Optional<Offer> optionalOffer = offerRepository.findById(offerId);
-        if (optionalOffer.isPresent()){
-            long total = StreamSupport.stream(
-                        applicationRepository.findAllByOffer(optionalOffer.get()).spliterator(),
-                        false)
-                    .count();
+        Offer offer = offerRepository.findById(offerId).orElseThrow(() -> new OfferNotFoundException(offerId));
 
-            return ResponseEntity.ok(new HashMap<String, Long>(){{put("apps_total", total);}});
-        }
+        long total = StreamSupport.stream(
+                    applicationRepository.findAllByOffer(offer).spliterator(),
+                    false)
+                .count();
 
-        return ResponseEntity.badRequest().body(
-                ErrorResponse.buildFromErrorMessage(
-                        "Error: offer with #%d not found",
-                        offerId));
+        return ResponseEntity.ok(new HashMap<String, Long>(){{put("apps_total", total);}});
     }
 
     /**
@@ -97,15 +94,9 @@ public class OfferController {
      */
     @GetMapping(path = "/{offerId:[\\d]+}")
     public ResponseEntity<?> getOfferById(@PathVariable(value = "offerId") int offerId){
-        Optional<Offer> optionalOffer = offerRepository.findById(offerId);
-        if (optionalOffer.isPresent()){
-            return ResponseEntity.ok(optionalOffer.get());
-        }
+        Offer offer = offerRepository.findById(offerId).orElseThrow(() -> new OfferNotFoundException(offerId));
 
-        return ResponseEntity.badRequest().body(
-                ErrorResponse.buildFromErrorMessage(
-                        "Error: offer with #%d not found",
-                        offerId));
+        return ResponseEntity.ok(offer);
     }
 
     /**
@@ -116,15 +107,9 @@ public class OfferController {
      */
     @GetMapping(path = "/{offerId:[\\d]+}/all")
     public ResponseEntity<?> allApplicationsPerOffers(@PathVariable(value = "offerId") int offerId){
-        Optional<Offer> optionalOffer = offerRepository.findById(offerId);
-        if (optionalOffer.isPresent()) {
-            return ResponseEntity.ok(applicationRepository.findAllByOffer(optionalOffer.get()));
-        }
+        Offer offer = offerRepository.findById(offerId).orElseThrow(() -> new OfferNotFoundException(offerId));
 
-        return ResponseEntity.badRequest().body(
-                ErrorResponse.buildFromErrorMessage(
-                        "Error: offer with #%d not found",
-                        offerId));
+        return ResponseEntity.ok(applicationRepository.findAllByOffer(offer));
     }
 
     /**
@@ -138,25 +123,13 @@ public class OfferController {
     public ResponseEntity<?> getApplicationForOffer(
             @PathVariable(value = "offerId") int offerId,
             @PathVariable(value = "appId") int appId){
-        Optional<Offer> optionalOffer = offerRepository.findById(offerId);
-        if (optionalOffer.isPresent()){
-            Optional<Application> optionalApplication = applicationRepository.findByIdAndOffer(
-                                                                                appId,
-                                                                                optionalOffer.get());
-            if (optionalApplication.isPresent()){
-                return ResponseEntity.ok(optionalApplication.get());
-            }
+        Offer offer = offerRepository.findById(offerId).orElseThrow(() -> new OfferNotFoundException(offerId));
 
-            return ResponseEntity.badRequest().body(
-                    ErrorResponse.buildFromErrorMessage(
-                            "Error: application with #%d not found",
-                            appId));
-        }
+        Application application = applicationRepository
+                .findByIdAndOffer(appId, offer)
+                .orElseThrow(() -> new ApplicationNotFoundException(appId));
 
-        return ResponseEntity.badRequest().body(
-                ErrorResponse.buildFromErrorMessage(
-                        "Error: offer with #%d not found",
-                        offerId));
+        return ResponseEntity.ok(application);
     }
 
     /**
@@ -194,13 +167,7 @@ public class OfferController {
             @Valid @RequestBody ApplicationPartial applicationPartial,
             Errors errors
     ) {
-        Optional<Offer> optionalOffer = offerRepository.findById(offerId);
-        if (!optionalOffer.isPresent()) {
-            return ResponseEntity.badRequest().body(
-                    ErrorResponse.buildFromErrorMessage(
-                            "Error: offer with #%d not found",
-                            offerId));
-        }
+        Offer offer = offerRepository.findById(offerId).orElseThrow(() -> new OfferNotFoundException(offerId));
 
         if (errors.hasErrors()) {
             return ResponseEntity.badRequest().body(
@@ -209,17 +176,11 @@ public class OfferController {
         }
 
         Application application = new Application(applicationPartial);
-        application.setOffer(optionalOffer.get());
-        boolean constrainError = false;
+        application.setOffer(offer);
         try{
-            application = applicationRepository.save(application);
+            applicationRepository.save(application);
         }catch (org.springframework.dao.DataIntegrityViolationException e){
-            constrainError = true;
-        }
-        if (constrainError){
-            return ResponseEntity.badRequest().body(
-                    ErrorResponse.buildFromErrorMessage("candidate is already submitted resume for the offer")
-            );
+            throw new ApplicationAlreadySubmittedException();
         }
 
         return ResponseEntity.status(HttpStatus.CREATED).body(applicationPartial);
@@ -237,39 +198,18 @@ public class OfferController {
             @PathVariable(value = "appId") int appId,
             @RequestBody Map<String, String> applicationPatch
     ){
-        Optional<Application> optionalApplication = applicationRepository.findById(appId);
-        if (!optionalApplication.isPresent()) {
-            return ResponseEntity.badRequest().body(
-                    ErrorResponse.buildFromErrorMessage(
-                            "Error: application with #%d not found",
-                            appId));
-        }
+        Application application = applicationRepository
+                .findById(appId)
+                .orElseThrow(() -> new ApplicationNotFoundException(appId));
 
-        Application application = optionalApplication.get();
-
-        boolean doSave = false;
         String applicationStatus = applicationPatch.getOrDefault("applicationStatus", null);
         log.info(
                 "requested applicationStatus patch from '{}' to '{}'",
                 application.getApplicationStatus().toString(),
                 applicationStatus);
-        if (applicationStatus != null){
-            try{
-                application.setApplicationStatus(ApplicationStatus.valueOf(applicationStatus));
+        if (applicationStatus == null) throw new IllegalArgumentException("Invali application status");
 
-                doSave = true;
-            }catch (IllegalArgumentException e){
-                return ResponseEntity.badRequest().body(
-                        ErrorResponse.buildFromErrorMessage(e.getMessage())
-                );
-            }
-        }
-
-        if (!doSave){
-            return ResponseEntity.badRequest().body(
-                    ErrorResponse.buildFromErrorMessage("nothing to patch")
-            );
-        }
+        application.setApplicationStatus(ApplicationStatus.valueOf(applicationStatus.toUpperCase()));
 
         offerRepository.save(application.getOffer());
         log.info(
@@ -278,7 +218,19 @@ public class OfferController {
                 application.getApplicationStatusHistories().size());
         applicationRepository.save(application);
 
-        rabbitNotificationService.sendNotification(application);
+        try{
+            log.debug("trying to send notification to the application: '{}'", application);
+            rabbitNotificationService.sendNotification(application);
+        }catch (AmqpException e){
+            log.error(
+                    "couldn't sent notification to the application '{}' due to exception: '{}'",
+                    application,
+                    e.getMessage());
+            //  TODO do proper error handling in case of problem with rabbintmq server
+            //  sending notification the same as using rabbitmq is auxiliary functionality at this point
+            //  this is why all exceptions from AMQP just suppressed
+        }
+
         applicationPatch.put("status", "updated");
         return ResponseEntity.ok(applicationPatch);
     }
