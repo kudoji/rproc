@@ -409,6 +409,14 @@ if application with the id \[**appId**] does not exist.
 ### known issues
 [back](#toc)
 
+These are issues currencly known that scheduled to be fixed in upcoming release:
+
+- all http requests are not secure;
+- current implementation stores resume text in db directly which is not a good approach;
+- **POST /offers/\[offerId]** response doesn't contain link to the created resource;
+    - URI will be changed to **POST /applications**.
+- **PATCH /offers/app/\[appId]** response doesn't contain link to the patched resource;
+    - URI will be changed to **PATCH /applications/\[appId]**.
 
 <a name="rabbitmq"></a>
 ### RabbitMQ server installation
