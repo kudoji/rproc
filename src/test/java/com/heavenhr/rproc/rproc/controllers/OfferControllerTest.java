@@ -137,7 +137,7 @@ public class OfferControllerTest {
         mockMvc.perform(
                 get("/offers/1/apps_total")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorMessage", containsString("Error: offer with #")));
     }
 
@@ -161,7 +161,7 @@ public class OfferControllerTest {
         mockMvc.perform(
                 get("/offers/1")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorMessage", containsString("Error: offer with #")));
     }
 
@@ -189,7 +189,7 @@ public class OfferControllerTest {
         mockMvc.perform(
                 get("/offers/1/1")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorMessage", containsString("Error: application with #")));
 
     }
@@ -207,7 +207,7 @@ public class OfferControllerTest {
         mockMvc.perform(
                 get("/offers/1/2")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorMessage", containsString("Error: application with #")));
 
     }
@@ -232,7 +232,7 @@ public class OfferControllerTest {
         mockMvc.perform(
                 get("/offers/1/all")
                         .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorMessage", containsString("Error: offer with #")));
     }
 
