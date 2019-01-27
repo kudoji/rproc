@@ -29,16 +29,20 @@ public class ExceptionHandler {
 
     @org.springframework.web.bind.annotation.ExceptionHandler(value = OfferNotFoundException.class)
     public ResponseEntity<ErrorResponse> offerNotFoundHandler(OfferNotFoundException e){
-        return ResponseEntity.badRequest().body(
-                ErrorResponse.buildFromErrorMessage(e.getMessage())
-        );
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(
+                    ErrorResponse.buildFromErrorMessage(e.getMessage())
+                );
     }
 
     @org.springframework.web.bind.annotation.ExceptionHandler(value = ApplicationNotFoundException.class)
     public ResponseEntity<ErrorResponse> applicationNotFoundHandler(ApplicationNotFoundException e){
-        return ResponseEntity.badRequest().body(
-                ErrorResponse.buildFromErrorMessage(e.getMessage())
-        );
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(
+                    ErrorResponse.buildFromErrorMessage(e.getMessage())
+                );
     }
 
     @org.springframework.web.bind.annotation.ExceptionHandler(value = ApplicationAlreadySubmittedException.class)

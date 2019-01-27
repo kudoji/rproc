@@ -1,7 +1,7 @@
 # list of useful curl commands
 
 # create an offer
-curl --header "Content-Type: application/json" --request POST --data '{"jobTitle":"a job title","startDate":"2019-01-19"}' http://localhost:8080/offers/
+curl --verbose --header "Content-Type: application/json" --request POST --data '{"jobTitle":"a job title","startDate":"2019-01-19"}' http://localhost:8080/offers/
 curl --header "Content-Type: application/json" --request GET http://localhost:8080/offers/1
 
 # create an application
