@@ -77,8 +77,11 @@ Successful offer creation returns '201 Created' HTTP status with created offer d
         "id": 1,
         "jobTitle": "a job title",
         "startDate": "2019-01-19",
-        "numberOfApplications": 0
+        "numberOfApplications": 0,
+        ,"_links":{"self":{"href":"[host]/offers/[offerId]"}}
     }
+
+where \[offerId] is created offer id.
 
 In case of error, e.g.:
 
@@ -108,7 +111,8 @@ Successful request returns '200 OK' with offer's body as follows:
         "id": 1,
         "jobTitle": "a job title",
         "startDate": "2019-01-19",
-        "numberOfApplications": 0
+        "numberOfApplications": 0,
+        "_links":{"self":{"href":"[host]/offers/1"}}
     }
 
 In case of error, assume that offer with id = 12 does not exists:
@@ -134,20 +138,24 @@ returns array of all available offers:
 
     200 OK
 
+    {"_embedded":{"offerList":
     [
         {
             "id": 1,
             "jobTitle":"a job title",
             "startDate": "2019-01-19",
-            "numberOfApplications": 4
+            "numberOfApplications": 4,
+            "_links":{"self":{"href":"[host]/offers/1"}}
         },
         {
             "id": 25,
             "jobTitle": "another job title",
             "startDate": "2019-02-19",
-            "numberOfApplications":0
+            "numberOfApplications":0,
+            "_links":{"self":{"href":"[host]/offers/25"}}
         }
     ]
+    }}
 
 or empty array:
 
@@ -242,7 +250,8 @@ might return:
             "jobTitle": "a job title",
             "startDate": "2019-01-24",
             "numberOfApplications": 5
-        }
+        },
+        "_links":{"self":{"href":"[host]/offers/1/1"}}
     }
 
 
@@ -264,21 +273,26 @@ might return:
 
     200 OK
 
+    {"_embedded":{"applicationList":
     [
         {
             "id": 1,
             "email": "email@email.com",
             "resume": "resume1",
             "applicationStatus":"INVITED",
-            "offer":{"id":1,"jobTitle":"job1","startDate":"2019-01-24","numberOfApplications":5}
+            "offer":{"id":1,"jobTitle":"job1","startDate":"2019-01-24","numberOfApplications":5},
+            "_links":{"self":{"href":"[host]/offers/1/1"}}
         },
         {
             "id": 9,
             "email": "email3@email.com",
             "resume": "text",
-            "applicationStatus":"APPLIED","offer":{"id":1,"jobTitle":"job1","startDate":"2019-01-24","numberOfApplications":5}
+            "applicationStatus":"APPLIED","offer":{"id":1,"jobTitle":"job1","startDate":"2019-01-24","numberOfApplications":5},
+            "_links":{"self":{"href":"[host]/offers/1/9"}}
         }
-    ]
+    ],
+    "_links":{"self":{"href":"[host]/offers/1/all"}}
+    }}
 
 
 <a name="app-total"></a>

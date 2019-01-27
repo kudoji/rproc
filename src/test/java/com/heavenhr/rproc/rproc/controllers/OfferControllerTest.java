@@ -9,6 +9,8 @@ import com.heavenhr.rproc.rproc.entities.ApplicationPartial;
 import com.heavenhr.rproc.rproc.entities.Offer;
 import com.heavenhr.rproc.rproc.enums.ApplicationStatus;
 import com.heavenhr.rproc.rproc.messaging.RabbitNotificationService;
+import com.heavenhr.rproc.rproc.recourseassemblers.ApplicationResourceAssembler;
+import com.heavenhr.rproc.rproc.recourseassemblers.OfferResourceAssembler;
 import com.heavenhr.rproc.rproc.repositories.ApplicationRepository;
 import com.heavenhr.rproc.rproc.repositories.OfferRepository;
 import org.junit.Before;
@@ -17,6 +19,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.hateoas.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -50,6 +53,12 @@ public class OfferControllerTest {
 
     @MockBean
     private RabbitNotificationService rabbitNotificationService;
+
+    @MockBean
+    private OfferResourceAssembler offerResourceAssembler;
+
+    @MockBean
+    private ApplicationResourceAssembler applicationResourceAssembler;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -86,13 +95,15 @@ public class OfferControllerTest {
     @Test
     public void testAllOffers() throws Exception{
         when(offerRepository.findAll()).thenReturn(Arrays.asList(offer));
+        when(offerResourceAssembler.toResource(offer)).thenReturn(new Resource<>(offer));
 
         mockMvc.perform(
                 get("/offers/all")
                     .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].jobTitle", is(offer.getJobTitle())));
+                .andExpect(jsonPath("$._embedded").exists())
+                .andExpect(jsonPath("$._embedded.offerList", hasSize(1)))
+                .andExpect(jsonPath("$._embedded.offerList[0].jobTitle", is(offer.getJobTitle())));
     }
 
     @Test
@@ -144,6 +155,7 @@ public class OfferControllerTest {
     @Test
     public void testGetOfferByIdWithValidId() throws Exception{
         when(offerRepository.findById(1)).thenReturn(Optional.of(offer));
+        when(offerResourceAssembler.toResource(offer)).thenReturn(new Resource<>(offer));
 
         mockMvc.perform(
                 get("/offers/1")
@@ -169,6 +181,7 @@ public class OfferControllerTest {
     public void testGetApplicationForOfferValid() throws Exception{
         when(offerRepository.findById(1)).thenReturn(Optional.of(offer));
         when(applicationRepository.findByIdAndOffer(1, offer)).thenReturn(Optional.of(application));
+        when(applicationResourceAssembler.toResource(application)).thenReturn(new Resource<>(application));
 
         mockMvc.perform(
                 get("/offers/1/1")
@@ -216,13 +229,15 @@ public class OfferControllerTest {
     public void testAllApplicationsPerOffersValid() throws Exception{
         when(offerRepository.findById(1)).thenReturn(Optional.of(offer));
         when(applicationRepository.findAllByOffer(offer)).thenReturn(Arrays.asList(application));
+        when(applicationResourceAssembler.toResource(application)).thenReturn(new Resource<>(application));
 
         mockMvc.perform(
                 get("/offers/1/all")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
-                .andExpect(jsonPath("$[0].email", is(application.getEmail())));
+                .andExpect(jsonPath("$._embedded").exists())
+                .andExpect(jsonPath("$._embedded.applicationList", hasSize(1)))
+                .andExpect(jsonPath("$._embedded.applicationList[0].email", is(application.getEmail())));
     }
 
     @Test
@@ -239,6 +254,7 @@ public class OfferControllerTest {
     @Test
     public void testSubmitOfferValid() throws Exception{
         when(offerRepository.save(offer)).thenReturn(offer);
+        when(offerResourceAssembler.toResource(offer)).thenReturn(new Resource<>(offer));
 
         mockMvc.perform(
                 post("/offers")

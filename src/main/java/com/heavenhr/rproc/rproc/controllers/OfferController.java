@@ -11,11 +11,15 @@ import com.heavenhr.rproc.rproc.exceptions.ApplicationAlreadySubmittedException;
 import com.heavenhr.rproc.rproc.exceptions.ApplicationNotFoundException;
 import com.heavenhr.rproc.rproc.exceptions.OfferNotFoundException;
 import com.heavenhr.rproc.rproc.messaging.RabbitNotificationService;
+import com.heavenhr.rproc.rproc.recourseassemblers.ApplicationResourceAssembler;
+import com.heavenhr.rproc.rproc.recourseassemblers.OfferResourceAssembler;
 import com.heavenhr.rproc.rproc.repositories.ApplicationRepository;
 import com.heavenhr.rproc.rproc.repositories.OfferRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.Resource;
+import org.springframework.hateoas.Resources;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -24,8 +28,13 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.linkTo;
+import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 
 @Slf4j
 @RestController
@@ -34,17 +43,23 @@ import java.util.stream.StreamSupport;
 public class OfferController {
     private final OfferRepository offerRepository;
     private final ApplicationRepository applicationRepository;
-
-    @Autowired
-    private RabbitNotificationService rabbitNotificationService;
+    private final RabbitNotificationService rabbitNotificationService;
+    private final OfferResourceAssembler offerResourceAssembler;
+    private final ApplicationResourceAssembler applicationResourceAssembler;
 
     @Autowired
     public OfferController(
             OfferRepository offerRepository,
-            ApplicationRepository applicationRepository){
+            ApplicationRepository applicationRepository,
+            RabbitNotificationService rabbitNotificationService,
+            OfferResourceAssembler offerResourceAssembler,
+            ApplicationResourceAssembler applicationResourceAssembler){
 
         this.offerRepository = offerRepository;
         this.applicationRepository = applicationRepository;
+        this.rabbitNotificationService = rabbitNotificationService;
+        this.offerResourceAssembler = offerResourceAssembler;
+        this.applicationResourceAssembler = applicationResourceAssembler;
     }
 
     /**
@@ -52,8 +67,14 @@ public class OfferController {
      * @return
      */
     @GetMapping(path = "/all")
-    public Iterable<Offer> allOffers(){
-        return offerRepository.findAll();
+    public Resources<Resource<Offer>> allOffers(){
+        List<Resource<Offer>> resources = StreamSupport.stream(offerRepository.findAll().spliterator(), false)
+                .map(offerResourceAssembler::toResource)
+                .collect(Collectors.toList());
+
+        return new Resources<>(
+                resources,
+                linkTo(methodOn(OfferController.class).allOffers()).withSelfRel());
     }
 
     /**
@@ -96,7 +117,7 @@ public class OfferController {
     public ResponseEntity<?> getOfferById(@PathVariable(value = "offerId") int offerId){
         Offer offer = offerRepository.findById(offerId).orElseThrow(() -> new OfferNotFoundException(offerId));
 
-        return ResponseEntity.ok(offer);
+        return ResponseEntity.ok(offerResourceAssembler.toResource(offer));
     }
 
     /**
@@ -106,10 +127,17 @@ public class OfferController {
      * @return
      */
     @GetMapping(path = "/{offerId:[\\d]+}/all")
-    public ResponseEntity<?> allApplicationsPerOffers(@PathVariable(value = "offerId") int offerId){
+    public Resources<Resource<Application>> allApplicationsPerOffers(@PathVariable(value = "offerId") int offerId){
         Offer offer = offerRepository.findById(offerId).orElseThrow(() -> new OfferNotFoundException(offerId));
 
-        return ResponseEntity.ok(applicationRepository.findAllByOffer(offer));
+        List<Resource<Application>> resources = StreamSupport.stream(
+                    applicationRepository.findAllByOffer(offer).spliterator(), false)
+                .map(applicationResourceAssembler::toResource)
+                .collect(Collectors.toList());
+
+        return new Resources<>(
+                resources,
+                linkTo(methodOn(OfferController.class).allApplicationsPerOffers(offerId)).withSelfRel());
     }
 
     /**
@@ -129,7 +157,7 @@ public class OfferController {
                 .findByIdAndOffer(appId, offer)
                 .orElseThrow(() -> new ApplicationNotFoundException(appId));
 
-        return ResponseEntity.ok(application);
+        return ResponseEntity.ok(applicationResourceAssembler.toResource(application));
     }
 
     /**
@@ -150,7 +178,13 @@ public class OfferController {
             );
         }
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(offerRepository.save(offer));
+        return ResponseEntity
+                .status(HttpStatus.CREATED)
+                .body(
+                    offerResourceAssembler.toResource(
+                            offerRepository.save(offer)
+                )
+        );
     }
 
     /**
