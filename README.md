@@ -78,7 +78,7 @@ Successful offer creation returns '201 Created' HTTP status with created offer d
         "jobTitle": "a job title",
         "startDate": "2019-01-19",
         "numberOfApplications": 0,
-        ,"_links":{"self":{"href":"[host]/offers/[offerId]"}}
+        "_links":{"self":{"href":"[host]/offers/[offerId]"}}
     }
 
 where \[offerId] is created offer id.
