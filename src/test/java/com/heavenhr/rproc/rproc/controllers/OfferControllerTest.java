@@ -25,10 +25,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
@@ -93,15 +90,26 @@ public class OfferControllerTest {
     }
 
     @Test
-    public void testAllOffers() throws Exception{
+    public void allOffers_withNoOffers() throws Exception{
+        mockMvc.perform(
+                get("/offers")
+                    .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._embedded").doesNotExist())
+                .andExpect(jsonPath("$._links.self.href").exists());
+    }
+
+    @Test
+    public void allOffers_withSomeOffers() throws Exception{
         when(offerRepository.findAll()).thenReturn(Arrays.asList(offer));
         when(offerResourceAssembler.toResource(offer)).thenReturn(new Resource<>(offer));
 
         mockMvc.perform(
-                get("/offers/all")
+                get("/offers")
                     .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$._embedded").exists())
+                .andExpect(jsonPath("$._links.self.href").exists())
                 .andExpect(jsonPath("$._embedded.offerList", hasSize(1)))
                 .andExpect(jsonPath("$._embedded.offerList[0].jobTitle", is(offer.getJobTitle())));
     }

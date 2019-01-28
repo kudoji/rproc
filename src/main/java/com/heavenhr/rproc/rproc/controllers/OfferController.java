@@ -66,7 +66,7 @@ public class OfferController {
      * get list of all offers.  GET /offers/all
      * @return
      */
-    @GetMapping(path = "/all")
+    @GetMapping
     public Resources<Resource<Offer>> allOffers(){
         List<Resource<Offer>> resources = StreamSupport.stream(offerRepository.findAll().spliterator(), false)
                 .map(offerResourceAssembler::toResource)
