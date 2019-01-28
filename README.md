@@ -132,36 +132,58 @@ returns:
 [back](#toc)
 
 
-    GET /offers/all
+    GET /offers
 
 returns array of all available offers:
 
     200 OK
 
-    {"_embedded":{"offerList":
-    [
-        {
-            "id": 1,
-            "jobTitle":"a job title",
-            "startDate": "2019-01-19",
-            "numberOfApplications": 4,
-            "_links":{"self":{"href":"[host]/offers/1"}}
+    {
+        "_embedded": {
+            "offerList":
+            [
+                {
+                    "id": 1,
+                    "jobTitle":"a job title",
+                    "startDate": "2019-01-19",
+                    "numberOfApplications": 4,
+                    "_links": {
+                        "self": {
+                            "href": "[host]/offers/1"
+                        }
+                    }
+                },
+                {
+                    "id": 25,
+                    "jobTitle": "another job title",
+                    "startDate": "2019-02-19",
+                    "numberOfApplications":0,
+                    "_links": {
+                        "self": {
+                            "href": "[host]/offers/25"
+                        }
+                    }
+                }
+            ]
         },
-        {
-            "id": 25,
-            "jobTitle": "another job title",
-            "startDate": "2019-02-19",
-            "numberOfApplications":0,
-            "_links":{"self":{"href":"[host]/offers/25"}}
+        "_links": {
+            "self": {
+                "href": "http://localhost:8080/offers"
+            }
         }
-    ]
-    }}
+    }
 
-or empty array:
+or structure like this with no offers available:
 
     200 OK
 
-    []
+    {
+        "_links": {
+            "self": {
+                "href": "http://localhost:8080/offers"
+            }
+        }
+    }
 
 
 <a name="app-create"></a>
