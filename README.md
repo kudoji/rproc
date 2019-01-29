@@ -25,6 +25,7 @@ ___
         1. [creating an application](#app-create)
         1. [reading a single application](#app-read)
         1. [list all applications](#app-list)
+        1. [list all applications for an offer](#app-offer-list)
         1. [get total number of applications](#app-total)
         1. [get total number of applications for an offer](#app-offer-total)
     1. [application statuses](#app-status)
@@ -281,40 +282,113 @@ might return:
 ### list all applications
 [back](#toc)
 
+User is able to get list of all applications.
+
+    GET /applications
+
+Possible return:
+
+    200 OK
+
+    {
+        "_embedded":{
+            "applicationList":
+            [
+                {
+                    "id": 1,
+                    "email": "email@email.com",
+                    "resume": "resume1",
+                    "applicationStatus":"INVITED",
+                    "_links":{
+                        "self":{
+                            "href": "[host]/offers/1/1"
+                        }
+                    }
+                },
+                {
+                    "id": 3,
+                    "email": "email3@email.com",
+                    "resume": "text",
+                    "applicationStatus":"APPLIED"
+                    "_links":{
+                        "self":{
+                            "href": "[host]/offers/1/3"
+                        }
+                    }
+                },
+                {
+                    "id": 9,
+                    "email": "email9@email.com",
+                    "resume": "text",
+                    "applicationStatus":"APPLIED",
+                    "_links":{
+                        "self":{
+                            "href": "[host]/offers/1/9"
+                        }
+                    }
+                }
+            ],
+        },
+        "_links":{
+            "self":{
+                "href": "[host]/applications"
+            }
+        }
+    }
+
+
+<a name="app-offer-list"></a>
+### list all applications for an offer
+[back](#toc)
+
 User is able to get list of all applications for an offer.
 
-    GET /offers/[offerId]/all
+    GET /applications?offerId=[offerId]
 
 where \[offerId] requested offer user want to get applications for.
 
 E.g.
 
-    GET /offers/1/all
+    GET /applications?offerId=1
 
 might return:
 
     200 OK
 
-    {"_embedded":{"applicationList":
-    [
-        {
-            "id": 1,
-            "email": "email@email.com",
-            "resume": "resume1",
-            "applicationStatus":"INVITED",
-            "offer":{"id":1,"jobTitle":"job1","startDate":"2019-01-24","numberOfApplications":5},
-            "_links":{"self":{"href":"[host]/offers/1/1"}}
+    {
+        "_embedded":{
+            "applicationList":
+            [
+                {
+                    "id": 1,
+                    "email": "email@email.com",
+                    "resume": "resume1",
+                    "applicationStatus":"INVITED",
+                    "_links":{
+                        "self":{
+                            "href": "[host]/offers/1/1"
+                        }
+                    }
+                },
+                {
+                    "id": 9,
+                    "email": "email9@email.com",
+                    "resume": "text",
+                    "applicationStatus":"APPLIED",
+                    "_links":{
+                        "self":{
+                            "href": "[host]/offers/1/9"
+                        }
+                    }
+                }
+            ],
         },
-        {
-            "id": 9,
-            "email": "email3@email.com",
-            "resume": "text",
-            "applicationStatus":"APPLIED","offer":{"id":1,"jobTitle":"job1","startDate":"2019-01-24","numberOfApplications":5},
-            "_links":{"self":{"href":"[host]/offers/1/9"}}
+        "_links":{
+            "self":{
+                "href": "[host]/applications?offerId=1"
+            }
         }
-    ],
-    "_links":{"self":{"href":"[host]/offers/1/all"}}
-    }}
+    }
 
 
 <a name="app-total"></a>
