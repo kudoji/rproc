@@ -201,24 +201,26 @@ or structure like this with no offers available:
 
 Candidate is able to create an application for particular offer.
 
-    POST /offers/[offerId]
+    POST /applications
 
 the following structure:
 
     {
         "email": "email1@email.com",
-        "resume": "resume text"
+        "resume": "resume text",
+        "offerId": [offerId]
     }
 
 where \[**offerId**] is the offer id application for is going to be created.
 
 Possible responses are:
 
-    200 OK
+    201 Created
 
     {
         "email": "email1@email.com",
-        "resume": "resume text"
+        "resume": "resume text",
+        "offerId": [offerId]
     }
 
 in case of successful application creation;
@@ -229,7 +231,7 @@ in case of successful application creation;
         "errorMessage": "candidate is already submitted resume for the offer"
     }
 
-if candidate is already submitted resume to the offer
+if candidate is already submitted resume to the offer;
 
     400  Bad Request
 
@@ -237,7 +239,7 @@ if candidate is already submitted resume to the offer
         "errorMessage": "Error: offer with #112 not found"
     }
 
-if offer does not exist
+if offer does not exist;
 
     400  Bad Request
 

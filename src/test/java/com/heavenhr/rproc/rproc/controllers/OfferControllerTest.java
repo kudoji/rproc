@@ -5,7 +5,6 @@ package com.heavenhr.rproc.rproc.controllers;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.heavenhr.rproc.rproc.entities.Application;
-import com.heavenhr.rproc.rproc.entities.ApplicationPartial;
 import com.heavenhr.rproc.rproc.entities.Offer;
 import com.heavenhr.rproc.rproc.enums.ApplicationStatus;
 import com.heavenhr.rproc.rproc.messaging.RabbitNotificationService;
@@ -164,39 +163,6 @@ public class OfferControllerTest {
                 post("/offers")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(offerInvalid))
-        )
-                .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.errorMessage", containsString("Validation failed due to")))
-                .andExpect(jsonPath("$.errors").exists());
-    }
-
-    @Test
-    public void testSubmitApplicationValid() throws Exception{
-        when(offerRepository.findById(1)).thenReturn(Optional.of(offer));
-        when(applicationRepository.save(application)).thenReturn(application);
-
-        ApplicationPartial applicationPartial = new ApplicationPartial(application);
-
-        mockMvc.perform(
-                post("/offers/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(applicationPartial))
-        )
-                .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.email", is(application.getEmail())))
-                .andExpect(jsonPath("$.resume", is(application.getResume())));
-    }
-
-    @Test
-    public void testSubmitApplicationInvalid() throws Exception{
-        when(offerRepository.findById(1)).thenReturn(Optional.of(offer));
-
-        ApplicationPartial applicationInvalid = new ApplicationPartial();
-
-        mockMvc.perform(
-                post("/offers/1")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(applicationInvalid))
         )
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.errorMessage", containsString("Validation failed due to")))

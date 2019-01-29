@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import javax.persistence.Column;
 import javax.persistence.Enumerated;
 import javax.validation.constraints.Email;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotBlank;
 
 /**
@@ -25,12 +26,14 @@ import javax.validation.constraints.NotBlank;
 public class ApplicationPartial {
     @NotBlank(message = "Candidate email cannot be empty")
     @Email(message = "Candidate email is invalid")
-    @Column(nullable = false)
     private String email;
 
     //TODO make it as a file link
     @NotBlank(message = "Resume cannot be empty")
     private String resume;
+
+    @Min(value = 1, message = "Offer id is invalid")
+    private int offerId;
 
     /**
      * Creates instance from Application
@@ -40,5 +43,6 @@ public class ApplicationPartial {
     public ApplicationPartial(Application application){
         this.email = application.getEmail();
         this.resume = application.getResume();
+        this.offerId = application.getOffer().getId();
     }
 }
