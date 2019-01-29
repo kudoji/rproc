@@ -323,14 +323,14 @@ might return:
 
 User is able to get total number of applications
 
-    GET /offers/apps_total
+    GET /applications/total
 
 Possible response:
 
     200 OK
 
     {
-        "apps_total": 5
+        "total": 5
     }
 
 
@@ -340,7 +340,7 @@ Possible response:
 
 User is able to get total number of applications for a particular offer.
 
-    GET /offers/[offerId]/apps_total
+    GET /applications/total?offerId=[offerId]
 
 where \[**offerId**] is offer id number applications is requested for.
 
@@ -349,7 +349,7 @@ Possible response:
     200 OK
 
     {
-        "apps_total": 5
+        "total": 3
     }
 
 
