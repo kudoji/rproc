@@ -63,7 +63,7 @@ public class OfferController {
     }
 
     /**
-     * get list of all offers.  GET /offers/all
+     * get list of all offers.  GET /offers
      * @return
      */
     @GetMapping
@@ -88,26 +88,6 @@ public class OfferController {
         Offer offer = offerRepository.findById(offerId).orElseThrow(() -> new OfferNotFoundException(offerId));
 
         return ResponseEntity.ok(offerResourceAssembler.toResource(offer));
-    }
-
-    /**
-     * get list of all applications for an offer. GET /offers/[offerId]/all
-     *
-     * @param offerId
-     * @return
-     */
-    @GetMapping(path = "/{offerId:[\\d]+}/all")
-    public Resources<Resource<Application>> allApplicationsPerOffers(@PathVariable(value = "offerId") int offerId){
-        Offer offer = offerRepository.findById(offerId).orElseThrow(() -> new OfferNotFoundException(offerId));
-
-        List<Resource<Application>> resources = StreamSupport.stream(
-                    applicationRepository.findAllByOffer(offer).spliterator(), false)
-                .map(applicationResourceAssembler::toResource)
-                .collect(Collectors.toList());
-
-        return new Resources<>(
-                resources,
-                linkTo(methodOn(OfferController.class).allApplicationsPerOffers(offerId)).withSelfRel());
     }
 
     /**

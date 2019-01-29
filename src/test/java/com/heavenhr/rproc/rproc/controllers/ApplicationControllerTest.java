@@ -5,6 +5,7 @@ package com.heavenhr.rproc.rproc.controllers;
 
 import com.heavenhr.rproc.rproc.entities.Application;
 import com.heavenhr.rproc.rproc.entities.Offer;
+import com.heavenhr.rproc.rproc.recourseassemblers.ApplicationResourceAssembler;
 import com.heavenhr.rproc.rproc.repositories.ApplicationRepository;
 import com.heavenhr.rproc.rproc.repositories.OfferRepository;
 import org.junit.BeforeClass;
@@ -13,6 +14,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.hateoas.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
@@ -22,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
@@ -40,6 +43,9 @@ public class ApplicationControllerTest {
 
     @MockBean
     private ApplicationRepository applicationRepository;
+
+    @MockBean
+    private ApplicationResourceAssembler applicationResourceAssembler;
 
     private static Offer offer;
     private static List<Application> applications = new ArrayList<>();
@@ -87,6 +93,76 @@ public class ApplicationControllerTest {
         application.setOffer(offer2);
 
         applications.add(application);
+    }
+
+    @Test
+    public void allApplications_withNoApplications() throws Exception{
+        mockMvc.perform(
+                get("/applications")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._embedded").doesNotExist())
+                .andExpect(jsonPath("$._links").exists());
+    }
+
+    @Test
+    public void allApplications_withApplications() throws Exception{
+        when(applicationRepository.findAll()).thenReturn(applications);
+        applications.forEach(a ->
+                when(applicationResourceAssembler.toResource(a)).thenReturn(new Resource<>(a)));
+
+        mockMvc.perform(
+                get("/applications")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._embedded.applicationList", hasSize(applications.size())))
+                .andExpect(jsonPath("$._links").exists());
+    }
+
+    @Test
+    public void allApplications_withInvalidIntOfferId() throws Exception{
+        mockMvc.perform(
+                get("/applications?offerId=0")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is5xxServerError())
+                .andExpect(jsonPath("$.errorMessage").exists());
+    }
+
+    @Test
+    public void allApplications_withInvalidNotIntOfferId() throws Exception{
+        mockMvc.perform(
+                get("/applications?offerId=saw")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is5xxServerError())
+                .andExpect(jsonPath("$.errorMessage").exists());
+    }
+
+    @Test
+    public void allApplications_withValidOfferIdAndApplications() throws Exception{
+        when(offerRepository.findById(offer.getId())).thenReturn(Optional.of(offer));
+        when(applicationRepository.findAllByOffer(offer)).thenReturn(offer.getApplications());
+        offer.getApplications().forEach(a ->
+                when(applicationResourceAssembler.toResource(a)).thenReturn(new Resource<>(a)));
+
+        mockMvc.perform(
+                get("/applications?offerId=" + offer.getId())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._embedded.applicationList", hasSize(offer.getApplications().size())))
+                .andExpect(jsonPath("$._links").exists());
+    }
+
+    @Test
+    public void allApplications_withValidOfferIdAndNoApplications() throws Exception{
+        when(offerRepository.findById(offer.getId())).thenReturn(Optional.of(offer));
+        when(applicationRepository.findAllByOffer(offer)).thenReturn(new ArrayList<>());
+
+        mockMvc.perform(
+                get("/applications?offerId=" + offer.getId())
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$._embedded").doesNotExist())
+                .andExpect(jsonPath("$._links").exists());
     }
 
     @Test

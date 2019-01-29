@@ -188,32 +188,6 @@ public class OfferControllerTest {
     }
 
     @Test
-    public void testAllApplicationsPerOffersValid() throws Exception{
-        when(offerRepository.findById(1)).thenReturn(Optional.of(offer));
-        when(applicationRepository.findAllByOffer(offer)).thenReturn(Arrays.asList(application));
-        when(applicationResourceAssembler.toResource(application)).thenReturn(new Resource<>(application));
-
-        mockMvc.perform(
-                get("/offers/1/all")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$._embedded").exists())
-                .andExpect(jsonPath("$._embedded.applicationList", hasSize(1)))
-                .andExpect(jsonPath("$._embedded.applicationList[0].email", is(application.getEmail())));
-    }
-
-    @Test
-    public void testAllApplicationsPerOffersInvalidOffer() throws Exception{
-        when(offerRepository.findById(1)).thenReturn(Optional.empty());
-
-        mockMvc.perform(
-                get("/offers/1/all")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.errorMessage", containsString("Error: offer with #")));
-    }
-
-    @Test
     public void testSubmitOfferValid() throws Exception{
         when(offerRepository.save(offer)).thenReturn(offer);
         when(offerResourceAssembler.toResource(offer)).thenReturn(new Resource<>(offer));

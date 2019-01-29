@@ -45,6 +45,7 @@ public class Application {
     @Enumerated
     private ApplicationStatus applicationStatus;
 
+    @JsonIgnore
     @NotNull(message = "Offer must be selected")
     @ManyToOne(fetch = FetchType.LAZY)
     private Offer offer;
