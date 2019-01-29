@@ -3,7 +3,9 @@
  */
 package com.heavenhr.rproc.rproc.controllers;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.heavenhr.rproc.rproc.entities.Application;
+import com.heavenhr.rproc.rproc.entities.ApplicationPartial;
 import com.heavenhr.rproc.rproc.entities.Offer;
 import com.heavenhr.rproc.rproc.enums.ApplicationStatus;
 import com.heavenhr.rproc.rproc.recourseassemblers.ApplicationResourceAssembler;
@@ -31,6 +33,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -48,6 +51,9 @@ public class ApplicationControllerTest {
 
     @MockBean
     private ApplicationResourceAssembler applicationResourceAssembler;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     private static Offer offer;
     private static List<Application> applications = new ArrayList<>();
@@ -268,6 +274,57 @@ public class ApplicationControllerTest {
                 .andExpect(jsonPath("$.email", is(application.getEmail())))
                 .andExpect(jsonPath("$.resume", is(application.getResume())))
                 .andExpect(jsonPath("$.applicationStatus", is(application.getApplicationStatus().toString())));
+
+    }
+
+    @Test
+    public void submitApplication_withInvalidApplication() throws Exception{
+        ApplicationPartial applicationInvalid = new ApplicationPartial();
+
+        mockMvc.perform(
+                post("/applications")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(applicationInvalid))
+        )
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorMessage", containsString("Validation failed due to")))
+                .andExpect(jsonPath("$.errors").exists());
+
+    }
+
+    @Test
+    public void submitApplication_withValidApplicationAndNoOfferExists() throws Exception{
+        Application application = applications.get(0);
+        when(offerRepository.findById(application.getOffer().getId())).thenReturn(Optional.empty());
+
+        ApplicationPartial applicationInvalid = new ApplicationPartial(application);
+
+        mockMvc.perform(
+                post("/applications")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(applicationInvalid))
+        )
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorMessage", containsString("Error: offer with #")));
+
+    }
+
+    @Test
+    public void submitApplication_withValidApplicationAndOffer() throws Exception{
+        Application application = applications.get(0);
+        when(offerRepository.findById(application.getOffer().getId())).thenReturn(Optional.of(application.getOffer()));
+
+        ApplicationPartial applicationValid = new ApplicationPartial(application);
+
+        mockMvc.perform(
+                post("/applications")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(applicationValid))
+        )
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.email", is(application.getEmail())))
+                .andExpect(jsonPath("$.resume", is(application.getResume())))
+                .andExpect(jsonPath("$.offerId", is(application.getOffer().getId())));
 
     }
 

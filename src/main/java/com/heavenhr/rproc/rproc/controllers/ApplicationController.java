@@ -4,19 +4,25 @@
 package com.heavenhr.rproc.rproc.controllers;
 
 import com.heavenhr.rproc.rproc.entities.Application;
+import com.heavenhr.rproc.rproc.entities.ApplicationPartial;
 import com.heavenhr.rproc.rproc.entities.Offer;
+import com.heavenhr.rproc.rproc.exceptions.ApplicationAlreadySubmittedException;
 import com.heavenhr.rproc.rproc.exceptions.ApplicationNotFoundException;
 import com.heavenhr.rproc.rproc.exceptions.OfferNotFoundException;
 import com.heavenhr.rproc.rproc.recourseassemblers.ApplicationResourceAssembler;
 import com.heavenhr.rproc.rproc.repositories.ApplicationRepository;
+import com.heavenhr.rproc.rproc.repositories.OfferRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,14 +40,17 @@ import static org.springframework.hateoas.mvc.ControllerLinkBuilder.methodOn;
 public class ApplicationController {
     private final ApplicationRepository applicationRepository;
     private final ApplicationResourceAssembler applicationResourceAssembler;
+    private final OfferRepository offerRepository;
 
     @Autowired
     public ApplicationController(
             ApplicationRepository applicationRepository,
-            ApplicationResourceAssembler applicationResourceAssembler
+            ApplicationResourceAssembler applicationResourceAssembler,
+            OfferRepository offerRepository
     ){
         this.applicationRepository = applicationRepository;
         this.applicationResourceAssembler = applicationResourceAssembler;
+        this.offerRepository = offerRepository;
     }
 
     /**
@@ -113,4 +122,39 @@ public class ApplicationController {
 
         return ResponseEntity.ok(applicationResourceAssembler.toResource(application));
     }
+
+    /**
+     * create an application. POST /applications
+     *
+     * @param applicationPartial
+     * @param errors
+     * @return
+     */
+    @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> submitApplication(
+            @Valid @RequestBody ApplicationPartial applicationPartial,
+            Errors errors
+    ) {
+        if (errors.hasErrors()) {
+            return ResponseEntity.badRequest().body(
+                    ErrorResponse.buildFromErrors(errors)
+            );
+        }
+
+        int offerId = applicationPartial.getOfferId();
+        Offer offer = offerRepository
+                .findById(offerId)
+                .orElseThrow(() -> new OfferNotFoundException(offerId));
+
+        Application application = new Application(applicationPartial);
+        application.setOffer(offer);
+        try{
+            applicationRepository.save(application);
+        }catch (org.springframework.dao.DataIntegrityViolationException e){
+            throw new ApplicationAlreadySubmittedException();
+        }
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(applicationPartial);
+    }
+
 }

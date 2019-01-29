@@ -118,39 +118,6 @@ public class OfferController {
     }
 
     /**
-     * create an application. POST /offers/[offerId]
-     *
-     * @param offerId
-     * @param applicationPartial
-     * @param errors
-     * @return
-     */
-    @PostMapping(path = "/{offerId:[\\d]+}", consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<?> submitApplication(
-            @PathVariable(value = "offerId") int offerId,
-            @Valid @RequestBody ApplicationPartial applicationPartial,
-            Errors errors
-    ) {
-        Offer offer = offerRepository.findById(offerId).orElseThrow(() -> new OfferNotFoundException(offerId));
-
-        if (errors.hasErrors()) {
-            return ResponseEntity.badRequest().body(
-                    ErrorResponse.buildFromErrors(errors)
-            );
-        }
-
-        Application application = new Application(applicationPartial);
-        application.setOffer(offer);
-        try{
-            applicationRepository.save(application);
-        }catch (org.springframework.dao.DataIntegrityViolationException e){
-            throw new ApplicationAlreadySubmittedException();
-        }
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(applicationPartial);
-    }
-
-    /**
      * progress application status. PATCH /offers/app/[appId]
      *
      * @param appId
