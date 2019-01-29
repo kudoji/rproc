@@ -79,7 +79,11 @@ Successful offer creation returns '201 Created' HTTP status with created offer d
         "jobTitle": "a job title",
         "startDate": "2019-01-19",
         "numberOfApplications": 0,
-        "_links":{"self":{"href":"[host]/offers/[offerId]"}}
+        "_links":{
+            "self":{
+                "href": "[host]/offers/[offerId]"
+            }
+        }
     }
 
 where \[offerId] is created offer id.
@@ -113,7 +117,11 @@ Successful request returns '200 OK' with offer's body as follows:
         "jobTitle": "a job title",
         "startDate": "2019-01-19",
         "numberOfApplications": 0,
-        "_links":{"self":{"href":"[host]/offers/1"}}
+        "_links":{
+            "self":{
+                "href": "[host]/offers/1"
+            }
+        }
     }
 
 In case of error, assume that offer with id = 12 does not exists:
@@ -250,13 +258,13 @@ in case of validation error(s).
 
 User is able to read a single application for an offer.
 
-    GET /offers/[offerId]/[appId]
+    GET /applications/[appId]
 
-where \[offerId] and \[appId] requested offer and application respectively
+where \[appId] requested application Id
 
 E.g.
 
-    GET /offers/1/1
+    GET /applications/1
 
 might return:
 
@@ -267,14 +275,11 @@ might return:
         "email": "email@email.com",
         "resume":"resume1",
         "applicationStatus": "INVITED",
-        "offer":
-        {
-            "id": 1,
-            "jobTitle": "a job title",
-            "startDate": "2019-01-24",
-            "numberOfApplications": 5
-        },
-        "_links":{"self":{"href":"[host]/offers/1/1"}}
+        "_links":{
+            "self":{
+                "href": "[host]/applications/1"
+            }
+        }
     }
 
 
@@ -301,7 +306,7 @@ Possible return:
                     "applicationStatus":"INVITED",
                     "_links":{
                         "self":{
-                            "href": "[host]/offers/1/1"
+                            "href": "[host]/applications/1"
                         }
                     }
                 },
@@ -312,7 +317,7 @@ Possible return:
                     "applicationStatus":"APPLIED"
                     "_links":{
                         "self":{
-                            "href": "[host]/offers/1/3"
+                            "href": "[host]/applications/3"
                         }
                     }
                 },
@@ -323,7 +328,7 @@ Possible return:
                     "applicationStatus":"APPLIED",
                     "_links":{
                         "self":{
-                            "href": "[host]/offers/1/9"
+                            "href": "[host]/applications/9"
                         }
                     }
                 }
@@ -366,7 +371,7 @@ might return:
                     "applicationStatus":"INVITED",
                     "_links":{
                         "self":{
-                            "href": "[host]/offers/1/1"
+                            "href": "[host]/applications/1"
                         }
                     }
                 },
@@ -377,7 +382,7 @@ might return:
                     "applicationStatus":"APPLIED",
                     "_links":{
                         "self":{
-                            "href": "[host]/offers/1/9"
+                            "href": "[host]/applications/9"
                         }
                     }
                 }

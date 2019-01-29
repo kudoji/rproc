@@ -91,26 +91,6 @@ public class OfferController {
     }
 
     /**
-     * read a single application for an offer. GET /offers/[offerId]/[appId]
-     *
-     * @param offerId
-     * @param appId
-     * @return
-     */
-    @GetMapping(path = "/{offerId:[\\d]+}/{appId:[\\d]+}")
-    public ResponseEntity<?> getApplicationForOffer(
-            @PathVariable(value = "offerId") int offerId,
-            @PathVariable(value = "appId") int appId){
-        Offer offer = offerRepository.findById(offerId).orElseThrow(() -> new OfferNotFoundException(offerId));
-
-        Application application = applicationRepository
-                .findByIdAndOffer(appId, offer)
-                .orElseThrow(() -> new ApplicationNotFoundException(appId));
-
-        return ResponseEntity.ok(applicationResourceAssembler.toResource(application));
-    }
-
-    /**
      * creates an offer. POST /offers
      *
      * @param offer

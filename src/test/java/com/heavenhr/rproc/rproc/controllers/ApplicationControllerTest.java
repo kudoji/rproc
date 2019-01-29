@@ -5,6 +5,7 @@ package com.heavenhr.rproc.rproc.controllers;
 
 import com.heavenhr.rproc.rproc.entities.Application;
 import com.heavenhr.rproc.rproc.entities.Offer;
+import com.heavenhr.rproc.rproc.enums.ApplicationStatus;
 import com.heavenhr.rproc.rproc.recourseassemblers.ApplicationResourceAssembler;
 import com.heavenhr.rproc.rproc.repositories.ApplicationRepository;
 import com.heavenhr.rproc.rproc.repositories.OfferRepository;
@@ -24,6 +25,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
@@ -75,6 +77,7 @@ public class ApplicationControllerTest {
         application.setResume("resume1");
         application.setEmail("email1@email.com");
         application.setOffer(offer);
+        application.setApplicationStatus(ApplicationStatus.APPLIED);
 
         applications.add(application);
 
@@ -83,6 +86,7 @@ public class ApplicationControllerTest {
         application.setResume("resume2");
         application.setEmail("email2@email.com");
         application.setOffer(offer);
+        application.setApplicationStatus(ApplicationStatus.APPLIED);
 
         applications.add(application);
 
@@ -91,6 +95,7 @@ public class ApplicationControllerTest {
         application.setResume("resume2");
         application.setEmail("email2@email.com");
         application.setOffer(offer2);
+        application.setApplicationStatus(ApplicationStatus.APPLIED);
 
         applications.add(application);
     }
@@ -229,6 +234,41 @@ public class ApplicationControllerTest {
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.total", is(offer0.getApplications().size())));
+    }
+
+    @Test
+    public void getApplication_withInvalidIntAppId() throws Exception{
+        mockMvc.perform(
+                get("/applications/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorMessage", containsString("Error: application with #")));
+    }
+
+    @Test
+    public void getApplication_withInvalidNotIntAppId() throws Exception{
+        mockMvc.perform(
+                get("/applications/ad1w")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void getApplication_withValidAppId() throws Exception{
+        Application application = applications.get(0);
+
+        when(applicationRepository.findById(application.getId())).thenReturn(Optional.of(application));
+        when(applicationResourceAssembler.toResource(application)).thenReturn(new Resource<>(application));
+
+        mockMvc.perform(
+                get("/applications/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id", is(application.getId())))
+                .andExpect(jsonPath("$.email", is(application.getEmail())))
+                .andExpect(jsonPath("$.resume", is(application.getResume())))
+                .andExpect(jsonPath("$.applicationStatus", is(application.getApplicationStatus().toString())));
+
     }
 
 }

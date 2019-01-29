@@ -140,54 +140,6 @@ public class OfferControllerTest {
     }
 
     @Test
-    public void testGetApplicationForOfferValid() throws Exception{
-        when(offerRepository.findById(1)).thenReturn(Optional.of(offer));
-        when(applicationRepository.findByIdAndOffer(1, offer)).thenReturn(Optional.of(application));
-        when(applicationResourceAssembler.toResource(application)).thenReturn(new Resource<>(application));
-
-        mockMvc.perform(
-                get("/offers/1/1")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.id", is(application.getId())))
-                .andExpect(jsonPath("$.email", is(application.getEmail())))
-                .andExpect(jsonPath("$.resume", is(application.getResume())))
-                .andExpect(jsonPath("$.applicationStatus", is(application.getApplicationStatus().toString())));
-
-    }
-
-    @Test
-    public void testGetApplicationForOfferInvalidApplication() throws Exception{
-        when(offerRepository.findById(1)).thenReturn(Optional.of(offer));
-        when(applicationRepository.findById(1)).thenReturn(Optional.empty());
-
-        mockMvc.perform(
-                get("/offers/1/1")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.errorMessage", containsString("Error: application with #")));
-
-    }
-
-    @Test
-    public void testGetApplicationForOfferValidApplicationFromOtherOffer() throws Exception{
-        when(offerRepository.findById(1)).thenReturn(Optional.of(offer));
-        when(offerRepository.findById(2)).thenReturn(Optional.of(offer2));
-
-        when(applicationRepository.findById(1)).thenReturn(Optional.of(application));
-        when(applicationRepository.findById(2)).thenReturn(Optional.of(application2));
-
-        when(applicationRepository.findByIdAndOffer(2, offer)).thenReturn(Optional.empty());
-
-        mockMvc.perform(
-                get("/offers/1/2")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound())
-                .andExpect(jsonPath("$.errorMessage", containsString("Error: application with #")));
-
-    }
-
-    @Test
     public void testSubmitOfferValid() throws Exception{
         when(offerRepository.save(offer)).thenReturn(offer);
         when(offerResourceAssembler.toResource(offer)).thenReturn(new Resource<>(offer));
