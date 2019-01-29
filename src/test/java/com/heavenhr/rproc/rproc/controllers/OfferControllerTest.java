@@ -168,20 +168,4 @@ public class OfferControllerTest {
                 .andExpect(jsonPath("$.errorMessage", containsString("Validation failed due to")))
                 .andExpect(jsonPath("$.errors").exists());
     }
-
-    @Test
-    public void testPatchApplicationValid() throws Exception{
-        when(applicationRepository.findById(1)).thenReturn(Optional.of(application));
-
-        Map<String, String> patch = new HashMap<>();
-        patch.put("applicationStatus", ApplicationStatus.INVITED.toString());
-
-        mockMvc.perform(
-                patch("/offers/app/1")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(patch))
-                )
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status", is("updated")));
-    }
 }
