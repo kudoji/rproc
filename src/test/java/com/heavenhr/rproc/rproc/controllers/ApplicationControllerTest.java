@@ -8,6 +8,7 @@ import com.heavenhr.rproc.rproc.entities.Application;
 import com.heavenhr.rproc.rproc.entities.ApplicationPartial;
 import com.heavenhr.rproc.rproc.entities.Offer;
 import com.heavenhr.rproc.rproc.enums.ApplicationStatus;
+import com.heavenhr.rproc.rproc.messaging.RabbitNotificationService;
 import com.heavenhr.rproc.rproc.recourseassemblers.ApplicationResourceAssembler;
 import com.heavenhr.rproc.rproc.repositories.ApplicationRepository;
 import com.heavenhr.rproc.rproc.repositories.OfferRepository;
@@ -23,9 +24,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
@@ -33,6 +32,7 @@ import static org.hamcrest.Matchers.is;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -51,6 +51,9 @@ public class ApplicationControllerTest {
 
     @MockBean
     private ApplicationResourceAssembler applicationResourceAssembler;
+
+    @MockBean
+    private RabbitNotificationService rabbitNotificationService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -328,4 +331,103 @@ public class ApplicationControllerTest {
 
     }
 
+    @Test
+    public void patchApplication_withInvalidIntAppId() throws Exception{
+        Map<String, String> patch = new HashMap<>();
+        patch.put("applicationStatus", ApplicationStatus.INVITED.toString());
+
+        mockMvc.perform(
+                patch("/applications/1/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(patch))
+        )
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorMessage", containsString("Error: application with #")));
+    }
+
+    @Test
+    public void patchApplication_withInvalidNotIntAppId() throws Exception{
+        Map<String, String> patch = new HashMap<>();
+        patch.put("applicationStatus", ApplicationStatus.INVITED.toString());
+
+        mockMvc.perform(
+                patch("/applications/dsd1/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(patch))
+        )
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    public void patchApplication_withValidAppIdAndNullStatus() throws Exception{
+        Application application = applications.get(0);
+        when(applicationRepository.findById(application.getId())).thenReturn(Optional.of(application));
+
+        Map<String, String> patch = new HashMap<>();
+
+        mockMvc.perform(
+                patch("/applications/" + application.getId() + "/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(patch))
+        )
+                .andExpect(status().is5xxServerError())
+                .andExpect(jsonPath("$.errorMessage", containsString("Invalid application status")));
+    }
+
+    @Test
+    public void patchApplication_withValidAppIdAndEmptyStatus() throws Exception{
+        Application application = applications.get(0);
+        when(applicationRepository.findById(application.getId())).thenReturn(Optional.of(application));
+
+        Map<String, String> patch = new HashMap<>();
+        patch.put("applicationStatus", "");
+
+        mockMvc.perform(
+                patch("/applications/" + application.getId() + "/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(patch))
+        )
+                .andExpect(status().is5xxServerError())
+                .andExpect(jsonPath("$.errorMessage").exists());
+    }
+
+    @Test
+    public void patchApplication_withValidAppIdAndInvalidStatus() throws Exception{
+        Application application = new Application();
+        application.setApplicationStatus(ApplicationStatus.APPLIED);
+        application.setId(1);
+        assertEquals(ApplicationStatus.APPLIED, application.getApplicationStatus());
+
+        when(applicationRepository.findById(application.getId())).thenReturn(Optional.of(application));
+
+        Map<String, String> patch = new HashMap<>();
+        patch.put("applicationStatus", ApplicationStatus.HIRED.toString());
+
+        mockMvc.perform(
+                patch("/applications/" + application.getId() + "/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(patch))
+        )
+                .andExpect(status().is5xxServerError())
+                .andExpect(jsonPath("$.errorMessage", containsString("Application status is incorrect")));
+    }
+
+    @Test
+    public void patchApplication_withValidAppIdAndStatus() throws Exception{
+        Application application = applications.get(0);
+        assertEquals(ApplicationStatus.APPLIED, application.getApplicationStatus());
+
+        when(applicationRepository.findById(application.getId())).thenReturn(Optional.of(application));
+
+        Map<String, String> patch = new HashMap<>();
+        patch.put("applicationStatus", ApplicationStatus.INVITED.toString());
+
+        mockMvc.perform(
+                patch("/applications/" + application.getId() + "/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(patch))
+        )
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status", is("updated")));
+    }
 }

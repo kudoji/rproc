@@ -463,7 +463,7 @@ Other scenarios are treated as error with response '**400 Bad Request**'.
 
 User is able to progress the application's status
 
-    PATCH /offers/app/[appId]
+    PATCH /applications/[appId]/status
 
 where \[**appId**] is application id which status is need to be progressed
 
