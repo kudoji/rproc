@@ -78,36 +78,6 @@ public class OfferController {
     }
 
     /**
-     * get the total number of applications. GET /offers/apps_total
-     *
-     * @return
-     */
-    @GetMapping(path = "/apps_total")
-    public Map<String, Long> getNumberOfApplicationsTotal(){
-        long total = StreamSupport.stream(applicationRepository.findAll().spliterator(), false).count();
-
-        return new HashMap<String, Long>(){{put("apps_total", total);}};
-    }
-
-    /**
-     * get the total number of applications for an offer. GET /offers/[offerId]/apps_total
-     *
-     * @param offerId
-     * @return
-     */
-    @GetMapping(path = "/{offerId:[\\d]+}/apps_total")
-    public ResponseEntity<?> getNumberOfApplicationsPerOffer(@PathVariable(value = "offerId") int offerId){
-        Offer offer = offerRepository.findById(offerId).orElseThrow(() -> new OfferNotFoundException(offerId));
-
-        long total = StreamSupport.stream(
-                    applicationRepository.findAllByOffer(offer).spliterator(),
-                    false)
-                .count();
-
-        return ResponseEntity.ok(new HashMap<String, Long>(){{put("apps_total", total);}});
-    }
-
-    /**
      * read a single offer. GET /offers/[id]
      *
      * @param offerId

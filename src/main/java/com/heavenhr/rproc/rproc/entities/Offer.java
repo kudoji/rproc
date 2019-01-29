@@ -36,6 +36,7 @@ public class Offer {
     private LocalDate startDate;
 
     @Transient
+    @Setter(AccessLevel.NONE)
     private int numberOfApplications = 0;
 
     @JsonIgnore
