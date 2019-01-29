@@ -5,6 +5,8 @@ package com.heavenhr.rproc.rproc.controllers;
 
 import com.heavenhr.rproc.rproc.entities.Application;
 import com.heavenhr.rproc.rproc.entities.Offer;
+import com.heavenhr.rproc.rproc.exceptions.ApplicationNotFoundException;
+import com.heavenhr.rproc.rproc.exceptions.OfferNotFoundException;
 import com.heavenhr.rproc.rproc.recourseassemblers.ApplicationResourceAssembler;
 import com.heavenhr.rproc.rproc.repositories.ApplicationRepository;
 import lombok.extern.slf4j.Slf4j;
@@ -12,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.HashMap;
@@ -95,4 +98,19 @@ public class ApplicationController {
         return new HashMap<String, Long>(){{put("total", total);}};
     }
 
+    /**
+     * read a single application. GET /applications/[appId]
+     *
+     * @param appId
+     * @return
+     */
+    @GetMapping(path = "/{appId:[\\d]+}")
+    public ResponseEntity<Resource<Application>> getApplication(
+            @PathVariable(value = "appId") int appId){
+        Application application = applicationRepository
+                .findById(appId)
+                .orElseThrow(() -> new ApplicationNotFoundException(appId));
+
+        return ResponseEntity.ok(applicationResourceAssembler.toResource(application));
+    }
 }
