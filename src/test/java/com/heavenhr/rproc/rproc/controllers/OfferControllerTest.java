@@ -30,7 +30,6 @@ import static org.hamcrest.Matchers.*;
 import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -109,8 +108,8 @@ public class OfferControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$._embedded").exists())
                 .andExpect(jsonPath("$._links.self.href").exists())
-                .andExpect(jsonPath("$._embedded.offerList", hasSize(1)))
-                .andExpect(jsonPath("$._embedded.offerList[0].jobTitle", is(offer.getJobTitle())));
+                .andExpect(jsonPath("$._embedded.offers", hasSize(1)))
+                .andExpect(jsonPath("$._embedded.offers[0].jobTitle", is(offer.getJobTitle())));
     }
 
     @Test

@@ -9,6 +9,7 @@ import lombok.AccessLevel;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.hateoas.core.Relation;
 
 import javax.persistence.*;
 import javax.validation.constraints.*;
@@ -16,6 +17,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+@Relation(value = "offer", collectionRelation = "offers")
 @Data
 @NoArgsConstructor(access = AccessLevel.PUBLIC)
 @Entity

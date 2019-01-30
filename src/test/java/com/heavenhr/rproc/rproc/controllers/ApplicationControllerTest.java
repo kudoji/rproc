@@ -129,7 +129,7 @@ public class ApplicationControllerTest {
                 get("/applications")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$._embedded.applicationList", hasSize(applications.size())))
+                .andExpect(jsonPath("$._embedded.applications", hasSize(applications.size())))
                 .andExpect(jsonPath("$._links").exists());
     }
 
@@ -162,7 +162,7 @@ public class ApplicationControllerTest {
                 get("/applications?offerId=" + offer.getId())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$._embedded.applicationList", hasSize(offer.getApplications().size())))
+                .andExpect(jsonPath("$._embedded.applications", hasSize(offer.getApplications().size())))
                 .andExpect(jsonPath("$._links").exists());
     }
 

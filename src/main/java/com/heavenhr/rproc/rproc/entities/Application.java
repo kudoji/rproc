@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.hateoas.core.Relation;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
@@ -19,6 +20,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Slf4j
+@Relation(value = "application", collectionRelation = "applications")
 @Data
 @NoArgsConstructor(access = AccessLevel.PUBLIC)
 @Entity
