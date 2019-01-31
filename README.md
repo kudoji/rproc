@@ -21,7 +21,7 @@ ___
         1. [creating a job offer](#offer-create)
         1. [reading a single offer](#offer-read)
         1. [list all offers](#offer-list)
-    1. [working with applictions](#app-create)
+    1. [working with applications](#app-create)
         1. [creating an application](#app-create)
         1. [reading a single application](#app-read)
         1. [list all applications](#app-list)
