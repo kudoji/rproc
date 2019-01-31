@@ -20,6 +20,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -31,6 +32,7 @@ import static org.hamcrest.collection.IsCollectionWithSize.hasSize;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -88,6 +90,16 @@ public class OfferControllerTest {
     }
 
     @Test
+    public void allOffers_withUnauthorizedUser() throws Exception{
+        mockMvc.perform(
+                get("/offers")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(header().string("Location", containsString("/login")));
+    }
+
+    @WithMockUser(username = "hr")
+    @Test
     public void allOffers_withNoOffers() throws Exception{
         mockMvc.perform(
                 get("/offers")
@@ -97,6 +109,7 @@ public class OfferControllerTest {
                 .andExpect(jsonPath("$._links.self.href").exists());
     }
 
+    @WithMockUser(username = "hr")
     @Test
     public void allOffers_withSomeOffers() throws Exception{
         when(offerRepository.findAll()).thenReturn(Arrays.asList(offer));
@@ -113,6 +126,16 @@ public class OfferControllerTest {
     }
 
     @Test
+    public void getOfferById_withUnauthorizedUser() throws Exception{
+        mockMvc.perform(
+                get("/offers/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(header().string("Location", containsString("/login")));
+    }
+
+    @WithMockUser(username = "hr")
+    @Test
     public void testGetOfferByIdWithValidId() throws Exception{
         when(offerRepository.findById(1)).thenReturn(Optional.of(offer));
         when(offerResourceAssembler.toResource(offer)).thenReturn(new Resource<>(offer));
@@ -126,6 +149,7 @@ public class OfferControllerTest {
                 .andExpect(jsonPath("$.startDate", is(offer.getStartDate().toString())));
     }
 
+    @WithMockUser(username = "hr")
     @Test
     public void testGetOfferByIdWithInvalidId() throws Exception{
         when(offerRepository.findById(1)).thenReturn(Optional.empty());
@@ -137,6 +161,18 @@ public class OfferControllerTest {
                 .andExpect(jsonPath("$.errorMessage", containsString("Error: offer with #")));
     }
 
+    @Test
+    public void submitOffer_withUnauthorizedUser() throws Exception{
+        mockMvc.perform(
+                post("/offers")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(offer))
+                )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(header().string("Location", containsString("/login")));
+    }
+
+    @WithMockUser(username = "hr")
     @Test
     public void testSubmitOfferValid() throws Exception{
         when(offerRepository.save(offer)).thenReturn(offer);
@@ -153,6 +189,7 @@ public class OfferControllerTest {
                 .andExpect(jsonPath("$.startDate", is(offer.getStartDate().toString())));
     }
 
+    @WithMockUser(username = "hr")
     @Test
     public void testSubmitOfferInvalid() throws Exception{
         Offer offerInvalid = new Offer();
