@@ -219,9 +219,15 @@ Possible responses are:
     201 Created
 
     {
+        "id": "1",
         "email": "email1@email.com",
         "resume": "resume text",
-        "offerId": [offerId]
+        "applicationStatus": "INVITED",
+        "_links":{
+            "self":{
+                "href": "[host]/applications/1"
+            }
+        }
     }
 
 in case of successful application creation;
