@@ -18,6 +18,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.hateoas.Link;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -174,9 +175,13 @@ public class OfferControllerTest {
 
     @WithMockUser(username = "hr")
     @Test
-    public void testSubmitOfferValid() throws Exception{
+    public void submitOffer_withValidData() throws Exception{
+        String createdLink = "link";
         when(offerRepository.save(offer)).thenReturn(offer);
-        when(offerResourceAssembler.toResource(offer)).thenReturn(new Resource<>(offer));
+        when(offerResourceAssembler.toResource(offer))
+        .thenReturn(
+            new Resource<>(offer, new Link(createdLink))
+        );
 
         mockMvc.perform(
                 post("/offers")
@@ -184,14 +189,16 @@ public class OfferControllerTest {
                         .content(objectMapper.writeValueAsString(offer))
                 )
                 .andExpect(status().isCreated())
+                .andExpect(header().string("Location", is(createdLink)))
                 .andExpect(jsonPath("$.id", is(offer.getId())))
                 .andExpect(jsonPath("$.jobTitle", is(offer.getJobTitle())))
-                .andExpect(jsonPath("$.startDate", is(offer.getStartDate().toString())));
+                .andExpect(jsonPath("$.startDate", is(offer.getStartDate().toString())))
+                .andExpect(jsonPath("$._links.self.href", is(createdLink)));
     }
 
     @WithMockUser(username = "hr")
     @Test
-    public void testSubmitOfferInvalid() throws Exception{
+    public void submitOffer_withInvalidData() throws Exception{
         Offer offerInvalid = new Offer();
         when(offerRepository.save(offerInvalid)).thenReturn(offerInvalid);
 

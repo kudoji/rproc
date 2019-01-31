@@ -21,6 +21,8 @@ import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
@@ -90,7 +92,7 @@ public class OfferController {
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> submitOffer(
             @Valid @RequestBody Offer offer,
-            Errors errors){
+            Errors errors) throws URISyntaxException {
 
         if (errors.hasErrors()){
             return ResponseEntity.badRequest().body(
@@ -98,12 +100,10 @@ public class OfferController {
             );
         }
 
+        Resource<Offer> resource = offerResourceAssembler.toResource(offerRepository.save(offer));
+
         return ResponseEntity
-                .status(HttpStatus.CREATED)
-                .body(
-                    offerResourceAssembler.toResource(
-                            offerRepository.save(offer)
-                )
-        );
+                .created(new URI(resource.getId().getHref()))
+                .body(resource);
     }
 }
