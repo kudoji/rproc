@@ -130,7 +130,7 @@ In case of error, assume that offer with id = 12 does not exists:
 
 returns:
 
-    400  Bad Request
+    404  Not Found
 
     {
         "errorMessage": "Error: offer with #12 not found"
@@ -233,7 +233,7 @@ in case of successful application creation;
 
 if candidate is already submitted resume to the offer;
 
-    400  Bad Request
+    404  Not Found
 
     {
         "errorMessage": "Error: offer with #112 not found"
@@ -486,7 +486,7 @@ Possible responses:
 
 if status updated successfully;
 
-    400  Bad Request
+    500  Internal Server Error
 
     {
         "errorMessage": "Application status is incorrect"
@@ -494,7 +494,7 @@ if status updated successfully;
 
 if status is invalid or out of the listed above scenarios;
 
-    400  Bad Request
+    404  Not Found
 
     {
         "errorMessage": "Error: application with #[appId] not found"
