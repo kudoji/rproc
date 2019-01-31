@@ -528,7 +528,6 @@ Consult curl.cmd file to check how to log in with curl
 These are issues currencly known that scheduled to be fixed in upcoming release:
 
 - current implementation stores resume text in db directly which is not a good approach;
-- **POST /applications** response doesn't contain link to the created resource;
 - **PATCH /applications/\[appId]/status** response doesn't contain link to the patched resource;
 
 <a name="rabbitmq"></a>

@@ -15,9 +15,11 @@ import com.heavenhr.rproc.rproc.repositories.OfferRepository;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.hateoas.Link;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
@@ -27,14 +29,10 @@ import org.springframework.test.web.servlet.MockMvc;
 import java.time.LocalDate;
 import java.util.*;
 
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.hasSize;
-import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.*;
 import static org.junit.Assert.assertEquals;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -365,8 +363,16 @@ public class ApplicationControllerTest {
     @WithMockUser(username = "hr")
     @Test
     public void submitApplication_withValidApplicationAndOffer() throws Exception{
+        String createdLink = "link_to_created_application";
         Application application = applications.get(0);
         when(offerRepository.findById(application.getOffer().getId())).thenReturn(Optional.of(application.getOffer()));
+        when(applicationRepository.save(ArgumentMatchers.any(Application.class))).thenReturn(application);
+
+        when(applicationResourceAssembler.toResource(application))
+            .thenReturn(new Resource<>(
+                    application,
+                    new Link(createdLink)
+            ));
 
         ApplicationPartial applicationValid = new ApplicationPartial(application);
 
@@ -376,10 +382,10 @@ public class ApplicationControllerTest {
                         .content(objectMapper.writeValueAsString(applicationValid))
         )
                 .andExpect(status().isCreated())
+                .andExpect(header().string("Location", is(createdLink)))
                 .andExpect(jsonPath("$.email", is(application.getEmail())))
                 .andExpect(jsonPath("$.resume", is(application.getResume())))
-                .andExpect(jsonPath("$.offerId", is(application.getOffer().getId())));
-
+                .andExpect(jsonPath("$._links.self.href", is(createdLink)));
     }
 
     @Test
