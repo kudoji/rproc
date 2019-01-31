@@ -219,7 +219,7 @@ Possible responses are:
     201 Created
 
     {
-        "id": "1",
+        "id": 1,
         "email": "email1@email.com",
         "resume": "resume text",
         "applicationStatus": "INVITED",
