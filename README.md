@@ -519,6 +519,7 @@ Default credentials are:
     username: hr
     password: hr
 
+Consult curl.cmd file to check how to log in with curl
 
 <a name="issues"></a>
 ### known issues
