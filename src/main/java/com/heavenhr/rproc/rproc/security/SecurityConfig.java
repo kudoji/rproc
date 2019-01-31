@@ -5,6 +5,7 @@ package com.heavenhr.rproc.rproc.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -29,7 +30,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             .csrf().disable()
             .authorizeRequests()
                 .antMatchers("/offers/**").authenticated()
-                .antMatchers("/applications").permitAll()
+                .antMatchers("/applications*", "/applications/*").authenticated()
+                .antMatchers(HttpMethod.PATCH, "/applications/*/status").permitAll()
                 .antMatchers("/", "/**").denyAll()
             .and()
                 .formLogin();

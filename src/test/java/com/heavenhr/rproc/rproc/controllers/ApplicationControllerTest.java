@@ -20,6 +20,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -34,6 +35,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -110,6 +112,17 @@ public class ApplicationControllerTest {
     }
 
     @Test
+    public void allApplications_withUnauthorizedUser() throws Exception{
+        mockMvc.perform(
+                get("/applications")
+                        .contentType(MediaType.APPLICATION_JSON)
+        )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(header().string("Location", containsString("/login")));
+    }
+
+    @WithMockUser(username = "hr")
+    @Test
     public void allApplications_withNoApplications() throws Exception{
         mockMvc.perform(
                 get("/applications")
@@ -119,6 +132,7 @@ public class ApplicationControllerTest {
                 .andExpect(jsonPath("$._links").exists());
     }
 
+    @WithMockUser(username = "hr")
     @Test
     public void allApplications_withApplications() throws Exception{
         when(applicationRepository.findAll()).thenReturn(applications);
@@ -134,6 +148,17 @@ public class ApplicationControllerTest {
     }
 
     @Test
+    public void allApplications_withUnauthorizedUserAndOfferId() throws Exception{
+        mockMvc.perform(
+                get("/applications?offerId=0")
+                        .contentType(MediaType.APPLICATION_JSON)
+        )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(header().string("Location", containsString("/login")));
+    }
+
+    @WithMockUser(username = "hr")
+    @Test
     public void allApplications_withInvalidIntOfferId() throws Exception{
         mockMvc.perform(
                 get("/applications?offerId=0")
@@ -142,6 +167,7 @@ public class ApplicationControllerTest {
                 .andExpect(jsonPath("$.errorMessage").exists());
     }
 
+    @WithMockUser(username = "hr")
     @Test
     public void allApplications_withInvalidNotIntOfferId() throws Exception{
         mockMvc.perform(
@@ -151,6 +177,7 @@ public class ApplicationControllerTest {
                 .andExpect(jsonPath("$.errorMessage").exists());
     }
 
+    @WithMockUser(username = "hr")
     @Test
     public void allApplications_withValidOfferIdAndApplications() throws Exception{
         when(offerRepository.findById(offer.getId())).thenReturn(Optional.of(offer));
@@ -166,6 +193,7 @@ public class ApplicationControllerTest {
                 .andExpect(jsonPath("$._links").exists());
     }
 
+    @WithMockUser(username = "hr")
     @Test
     public void allApplications_withValidOfferIdAndNoApplications() throws Exception{
         when(offerRepository.findById(offer.getId())).thenReturn(Optional.of(offer));
@@ -179,6 +207,7 @@ public class ApplicationControllerTest {
                 .andExpect(jsonPath("$._links").exists());
     }
 
+    @WithMockUser(username = "hr")
     @Test
     public void getNumberOfApplicationsTotal_withNoApplications() throws Exception{
         mockMvc.perform(
@@ -188,6 +217,7 @@ public class ApplicationControllerTest {
                 .andExpect(jsonPath("$.total", is(0)));
     }
 
+    @WithMockUser(username = "hr")
     @Test
     public void getNumberOfApplicationsTotal_withApplications() throws Exception{
         when(applicationRepository.findAll()).thenReturn(applications);
@@ -201,6 +231,7 @@ public class ApplicationControllerTest {
                 .andExpect(jsonPath("$.total", is(applications.size())));
     }
 
+    @WithMockUser(username = "hr")
     @Test
     public void getNumberOfApplicationsTotal_withInvalidIntOfferId() throws Exception{
         mockMvc.perform(
@@ -210,6 +241,7 @@ public class ApplicationControllerTest {
                 .andExpect(jsonPath("$.errorMessage").exists());
     }
 
+    @WithMockUser(username = "hr")
     @Test
     public void getNumberOfApplicationsTotal_withInvalidNotIntOfferId() throws Exception{
         mockMvc.perform(
@@ -219,6 +251,7 @@ public class ApplicationControllerTest {
                 .andExpect(jsonPath("$.errorMessage").exists());
     }
 
+    @WithMockUser(username = "hr")
     @Test
     public void getNumberOfApplicationsTotal_withValidOfferId() throws Exception{
         when(offerRepository.findById(offer.getId())).thenReturn(Optional.of(offer));
@@ -231,6 +264,7 @@ public class ApplicationControllerTest {
                 .andExpect(jsonPath("$.total", is(offer.getApplications().size())));
     }
 
+    @WithMockUser(username = "hr")
     @Test
     public void getNumberOfApplicationsTotal_withValidOfferIdAndZeroApplications() throws Exception{
         Offer offer0 = new Offer();
@@ -245,6 +279,7 @@ public class ApplicationControllerTest {
                 .andExpect(jsonPath("$.total", is(offer0.getApplications().size())));
     }
 
+    @WithMockUser(username = "hr")
     @Test
     public void getApplication_withInvalidIntAppId() throws Exception{
         mockMvc.perform(
@@ -254,6 +289,7 @@ public class ApplicationControllerTest {
                 .andExpect(jsonPath("$.errorMessage", containsString("Error: application with #")));
     }
 
+    @WithMockUser(username = "hr")
     @Test
     public void getApplication_withInvalidNotIntAppId() throws Exception{
         mockMvc.perform(
@@ -262,6 +298,7 @@ public class ApplicationControllerTest {
                 .andExpect(status().isNotFound());
     }
 
+    @WithMockUser(username = "hr")
     @Test
     public void getApplication_withValidAppId() throws Exception{
         Application application = applications.get(0);
@@ -270,7 +307,7 @@ public class ApplicationControllerTest {
         when(applicationResourceAssembler.toResource(application)).thenReturn(new Resource<>(application));
 
         mockMvc.perform(
-                get("/applications/1")
+                get("/applications/" + application.getId())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(application.getId())))
@@ -280,6 +317,18 @@ public class ApplicationControllerTest {
 
     }
 
+    @Test
+    public void submitApplication_withUnauthorizedUser() throws Exception{
+        mockMvc.perform(
+                post("/applications")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(applications.get(0)))
+        )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(header().string("Location", containsString("/login")));
+    }
+
+    @WithMockUser(username = "hr")
     @Test
     public void submitApplication_withInvalidApplication() throws Exception{
         ApplicationPartial applicationInvalid = new ApplicationPartial();
@@ -295,6 +344,7 @@ public class ApplicationControllerTest {
 
     }
 
+    @WithMockUser(username = "hr")
     @Test
     public void submitApplication_withValidApplicationAndNoOfferExists() throws Exception{
         Application application = applications.get(0);
@@ -312,6 +362,7 @@ public class ApplicationControllerTest {
 
     }
 
+    @WithMockUser(username = "hr")
     @Test
     public void submitApplication_withValidApplicationAndOffer() throws Exception{
         Application application = applications.get(0);
@@ -329,6 +380,20 @@ public class ApplicationControllerTest {
                 .andExpect(jsonPath("$.resume", is(application.getResume())))
                 .andExpect(jsonPath("$.offerId", is(application.getOffer().getId())));
 
+    }
+
+    @Test
+    public void patchApplication_withGetMethod() throws Exception{
+        Map<String, String> patch = new HashMap<>();
+        patch.put("applicationStatus", ApplicationStatus.INVITED.toString());
+
+        mockMvc.perform(
+                get("/applications/1/status")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(patch))
+        )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(header().string("Location", containsString("/login")));
     }
 
     @Test

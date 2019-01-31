@@ -30,6 +30,7 @@ ___
         1. [get total number of applications for an offer](#app-offer-total)
     1. [application statuses](#app-status)
         1. [progress the status of an application](#app-status-progress)
+1. [**security**](#security)
 1. [**known issues**](#issues)
 1. [**RabbitMQ server installation**](#rabbitmq)
 
@@ -508,18 +509,26 @@ if application with the id \[**appId**] does not exist.
     Note: to make this functionality work correctly you need RabbitMQ server installed.
 
 
+<a name="security"></a>
+### security
+[back](#toc)
+
+All http requests except progressing the status of an applications (see [progress the status of an application](#app-status-progress) section) require authentication.
+Default credentials are:
+
+    username: hr
+    password: hr
+
+
 <a name="issues"></a>
 ### known issues
 [back](#toc)
 
 These are issues currencly known that scheduled to be fixed in upcoming release:
 
-- all http requests are not secure;
 - current implementation stores resume text in db directly which is not a good approach;
-- **POST /offers/\[offerId]** response doesn't contain link to the created resource;
-    - URI will be changed to **POST /applications**.
-- **PATCH /offers/app/\[appId]** response doesn't contain link to the patched resource;
-    - URI will be changed to **PATCH /applications/\[appId]**.
+- **POST /applications** response doesn't contain link to the created resource;
+- **PATCH /applications/\[appId]/status** response doesn't contain link to the patched resource;
 
 <a name="rabbitmq"></a>
 ### RabbitMQ server installation
