@@ -21,10 +21,11 @@ ___
         1. [creating a job offer](#offer-create)
         1. [reading a single offer](#offer-read)
         1. [list all offers](#offer-list)
-    1. [working with applictions](#app-create)
+    1. [working with applications](#app-create)
         1. [creating an application](#app-create)
         1. [reading a single application](#app-read)
         1. [list all applications](#app-list)
+        1. [list all applications for an offer](#app-offer-list)
         1. [get total number of applications](#app-total)
         1. [get total number of applications for an offer](#app-offer-total)
     1. [application statuses](#app-status)
@@ -78,7 +79,11 @@ Successful offer creation returns '201 Created' HTTP status with created offer d
         "jobTitle": "a job title",
         "startDate": "2019-01-19",
         "numberOfApplications": 0,
-        ,"_links":{"self":{"href":"[host]/offers/[offerId]"}}
+        "_links":{
+            "self":{
+                "href": "[host]/offers/[offerId]"
+            }
+        }
     }
 
 where \[offerId] is created offer id.
@@ -112,7 +117,11 @@ Successful request returns '200 OK' with offer's body as follows:
         "jobTitle": "a job title",
         "startDate": "2019-01-19",
         "numberOfApplications": 0,
-        "_links":{"self":{"href":"[host]/offers/1"}}
+        "_links":{
+            "self":{
+                "href": "[host]/offers/1"
+            }
+        }
     }
 
 In case of error, assume that offer with id = 12 does not exists:
@@ -121,7 +130,7 @@ In case of error, assume that offer with id = 12 does not exists:
 
 returns:
 
-    400  Bad Request
+    404  Not Found
 
     {
         "errorMessage": "Error: offer with #12 not found"
@@ -132,36 +141,58 @@ returns:
 [back](#toc)
 
 
-    GET /offers/all
+    GET /offers
 
 returns array of all available offers:
 
     200 OK
 
-    {"_embedded":{"offerList":
-    [
-        {
-            "id": 1,
-            "jobTitle":"a job title",
-            "startDate": "2019-01-19",
-            "numberOfApplications": 4,
-            "_links":{"self":{"href":"[host]/offers/1"}}
+    {
+        "_embedded": {
+            "offerList":
+            [
+                {
+                    "id": 1,
+                    "jobTitle":"a job title",
+                    "startDate": "2019-01-19",
+                    "numberOfApplications": 4,
+                    "_links": {
+                        "self": {
+                            "href": "[host]/offers/1"
+                        }
+                    }
+                },
+                {
+                    "id": 25,
+                    "jobTitle": "another job title",
+                    "startDate": "2019-02-19",
+                    "numberOfApplications":0,
+                    "_links": {
+                        "self": {
+                            "href": "[host]/offers/25"
+                        }
+                    }
+                }
+            ]
         },
-        {
-            "id": 25,
-            "jobTitle": "another job title",
-            "startDate": "2019-02-19",
-            "numberOfApplications":0,
-            "_links":{"self":{"href":"[host]/offers/25"}}
+        "_links": {
+            "self": {
+                "href": "http://localhost:8080/offers"
+            }
         }
-    ]
-    }}
+    }
 
-or empty array:
+or structure like this with no offers available:
 
     200 OK
 
-    []
+    {
+        "_links": {
+            "self": {
+                "href": "http://localhost:8080/offers"
+            }
+        }
+    }
 
 
 <a name="app-create"></a>
@@ -170,24 +201,26 @@ or empty array:
 
 Candidate is able to create an application for particular offer.
 
-    POST /offers/[offerId]
+    POST /applications
 
 the following structure:
 
     {
         "email": "email1@email.com",
-        "resume": "resume text"
+        "resume": "resume text",
+        "offerId": [offerId]
     }
 
 where \[**offerId**] is the offer id application for is going to be created.
 
 Possible responses are:
 
-    200 OK
+    201 Created
 
     {
         "email": "email1@email.com",
-        "resume": "resume text"
+        "resume": "resume text",
+        "offerId": [offerId]
     }
 
 in case of successful application creation;
@@ -198,15 +231,15 @@ in case of successful application creation;
         "errorMessage": "candidate is already submitted resume for the offer"
     }
 
-if candidate is already submitted resume to the offer
+if candidate is already submitted resume to the offer;
 
-    400  Bad Request
+    404  Not Found
 
     {
         "errorMessage": "Error: offer with #112 not found"
     }
 
-if offer does not exist
+if offer does not exist;
 
     400  Bad Request
 
@@ -227,13 +260,13 @@ in case of validation error(s).
 
 User is able to read a single application for an offer.
 
-    GET /offers/[offerId]/[appId]
+    GET /applications/[appId]
 
-where \[offerId] and \[appId] requested offer and application respectively
+where \[appId] requested application Id
 
 E.g.
 
-    GET /offers/1/1
+    GET /applications/1
 
 might return:
 
@@ -244,14 +277,11 @@ might return:
         "email": "email@email.com",
         "resume":"resume1",
         "applicationStatus": "INVITED",
-        "offer":
-        {
-            "id": 1,
-            "jobTitle": "a job title",
-            "startDate": "2019-01-24",
-            "numberOfApplications": 5
-        },
-        "_links":{"self":{"href":"[host]/offers/1/1"}}
+        "_links":{
+            "self":{
+                "href": "[host]/applications/1"
+            }
+        }
     }
 
 
@@ -259,40 +289,113 @@ might return:
 ### list all applications
 [back](#toc)
 
+User is able to get list of all applications.
+
+    GET /applications
+
+Possible return:
+
+    200 OK
+
+    {
+        "_embedded":{
+            "applicationList":
+            [
+                {
+                    "id": 1,
+                    "email": "email@email.com",
+                    "resume": "resume1",
+                    "applicationStatus":"INVITED",
+                    "_links":{
+                        "self":{
+                            "href": "[host]/applications/1"
+                        }
+                    }
+                },
+                {
+                    "id": 3,
+                    "email": "email3@email.com",
+                    "resume": "text",
+                    "applicationStatus":"APPLIED"
+                    "_links":{
+                        "self":{
+                            "href": "[host]/applications/3"
+                        }
+                    }
+                },
+                {
+                    "id": 9,
+                    "email": "email9@email.com",
+                    "resume": "text",
+                    "applicationStatus":"APPLIED",
+                    "_links":{
+                        "self":{
+                            "href": "[host]/applications/9"
+                        }
+                    }
+                }
+            ],
+        },
+        "_links":{
+            "self":{
+                "href": "[host]/applications"
+            }
+        }
+    }
+
+
+<a name="app-offer-list"></a>
+### list all applications for an offer
+[back](#toc)
+
 User is able to get list of all applications for an offer.
 
-    GET /offers/[offerId]/all
+    GET /applications?offerId=[offerId]
 
 where \[offerId] requested offer user want to get applications for.
 
 E.g.
 
-    GET /offers/1/all
+    GET /applications?offerId=1
 
 might return:
 
     200 OK
 
-    {"_embedded":{"applicationList":
-    [
-        {
-            "id": 1,
-            "email": "email@email.com",
-            "resume": "resume1",
-            "applicationStatus":"INVITED",
-            "offer":{"id":1,"jobTitle":"job1","startDate":"2019-01-24","numberOfApplications":5},
-            "_links":{"self":{"href":"[host]/offers/1/1"}}
+    {
+        "_embedded":{
+            "applicationList":
+            [
+                {
+                    "id": 1,
+                    "email": "email@email.com",
+                    "resume": "resume1",
+                    "applicationStatus":"INVITED",
+                    "_links":{
+                        "self":{
+                            "href": "[host]/applications/1"
+                        }
+                    }
+                },
+                {
+                    "id": 9,
+                    "email": "email9@email.com",
+                    "resume": "text",
+                    "applicationStatus":"APPLIED",
+                    "_links":{
+                        "self":{
+                            "href": "[host]/applications/9"
+                        }
+                    }
+                }
+            ],
         },
-        {
-            "id": 9,
-            "email": "email3@email.com",
-            "resume": "text",
-            "applicationStatus":"APPLIED","offer":{"id":1,"jobTitle":"job1","startDate":"2019-01-24","numberOfApplications":5},
-            "_links":{"self":{"href":"[host]/offers/1/9"}}
+        "_links":{
+            "self":{
+                "href": "[host]/applications?offerId=1"
+            }
         }
-    ],
-    "_links":{"self":{"href":"[host]/offers/1/all"}}
-    }}
+    }
 
 
 <a name="app-total"></a>
@@ -301,14 +404,14 @@ might return:
 
 User is able to get total number of applications
 
-    GET /offers/apps_total
+    GET /applications/total
 
 Possible response:
 
     200 OK
 
     {
-        "apps_total": 5
+        "total": 5
     }
 
 
@@ -318,7 +421,7 @@ Possible response:
 
 User is able to get total number of applications for a particular offer.
 
-    GET /offers/[offerId]/apps_total
+    GET /applications/total?offerId=[offerId]
 
 where \[**offerId**] is offer id number applications is requested for.
 
@@ -327,7 +430,7 @@ Possible response:
     200 OK
 
     {
-        "apps_total": 5
+        "total": 3
     }
 
 
@@ -360,7 +463,7 @@ Other scenarios are treated as error with response '**400 Bad Request**'.
 
 User is able to progress the application's status
 
-    PATCH /offers/app/[appId]
+    PATCH /applications/[appId]/status
 
 where \[**appId**] is application id which status is need to be progressed
 
@@ -383,7 +486,7 @@ Possible responses:
 
 if status updated successfully;
 
-    400  Bad Request
+    500  Internal Server Error
 
     {
         "errorMessage": "Application status is incorrect"
@@ -391,7 +494,7 @@ if status updated successfully;
 
 if status is invalid or out of the listed above scenarios;
 
-    400  Bad Request
+    404  Not Found
 
     {
         "errorMessage": "Error: application with #[appId] not found"
@@ -409,6 +512,14 @@ if application with the id \[**appId**] does not exist.
 ### known issues
 [back](#toc)
 
+These are issues currencly known that scheduled to be fixed in upcoming release:
+
+- all http requests are not secure;
+- current implementation stores resume text in db directly which is not a good approach;
+- **POST /offers/\[offerId]** response doesn't contain link to the created resource;
+    - URI will be changed to **POST /applications**.
+- **PATCH /offers/app/\[appId]** response doesn't contain link to the patched resource;
+    - URI will be changed to **PATCH /applications/\[appId]**.
 
 <a name="rabbitmq"></a>
 ### RabbitMQ server installation

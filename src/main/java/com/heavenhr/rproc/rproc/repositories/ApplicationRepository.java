@@ -10,7 +10,5 @@ import org.springframework.data.repository.CrudRepository;
 import java.util.Optional;
 
 public interface ApplicationRepository extends CrudRepository<Application, Integer> {
-    Optional<Application> findByIdAndOffer(Integer id, Offer offer);
-
     Iterable<Application> findAllByOffer(Offer offer);
 }
