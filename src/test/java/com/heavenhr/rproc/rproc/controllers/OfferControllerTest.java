@@ -179,8 +179,8 @@ public class OfferControllerTest {
         String createdLink = "link";
         when(offerRepository.save(offer)).thenReturn(offer);
         when(offerResourceAssembler.toResource(offer))
-        .thenReturn(
-            new Resource<>(offer, new Link(createdLink))
+            .thenReturn(
+                new Resource<>(offer, new Link(createdLink))
         );
 
         mockMvc.perform(

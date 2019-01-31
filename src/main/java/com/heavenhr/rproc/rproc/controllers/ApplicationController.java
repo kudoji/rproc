@@ -26,6 +26,8 @@ import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -139,8 +141,7 @@ public class ApplicationController {
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> submitApplication(
             @Valid @RequestBody ApplicationPartial applicationPartial,
-            Errors errors
-    ) {
+            Errors errors) throws URISyntaxException {
         if (errors.hasErrors()) {
             return ResponseEntity.badRequest().body(
                     ErrorResponse.buildFromErrors(errors)
@@ -155,12 +156,16 @@ public class ApplicationController {
         Application application = new Application(applicationPartial);
         application.setOffer(offer);
         try{
-            applicationRepository.save(application);
+            application = applicationRepository.save(application);
         }catch (org.springframework.dao.DataIntegrityViolationException e){
             throw new ApplicationAlreadySubmittedException();
         }
 
-        return ResponseEntity.status(HttpStatus.CREATED).body(applicationPartial);
+        Resource<Application> resource = applicationResourceAssembler.toResource(application);
+
+        return ResponseEntity
+                .created(new URI(resource.getId().getHref()))
+                .body(resource);
     }
 
     /**
