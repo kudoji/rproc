@@ -4,6 +4,7 @@
 package com.heavenhr.rproc.rproc.controllers;
 
 import com.heavenhr.rproc.rproc.entities.Offer;
+import com.heavenhr.rproc.rproc.exceptions.OfferAlreadySubmittedException;
 import com.heavenhr.rproc.rproc.exceptions.OfferNotFoundException;
 import com.heavenhr.rproc.rproc.messaging.RabbitNotificationService;
 import com.heavenhr.rproc.rproc.recourseassemblers.ApplicationResourceAssembler;
@@ -100,7 +101,13 @@ public class OfferController {
             );
         }
 
-        Resource<Offer> resource = offerResourceAssembler.toResource(offerRepository.save(offer));
+        try{
+            offer = offerRepository.save(offer);
+        }catch (org.springframework.dao.DataIntegrityViolationException e){
+            throw new OfferAlreadySubmittedException();
+        }
+
+        Resource<Offer> resource = offerResourceAssembler.toResource(offer);
 
         return ResponseEntity
                 .created(new URI(resource.getId().getHref()))
