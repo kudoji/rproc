@@ -28,10 +28,6 @@ public class ApplicationPartial {
     @Email(message = "Candidate email is invalid")
     private String email;
 
-    //TODO make it as a file link
-    @NotBlank(message = "Resume cannot be empty")
-    private String resume;
-
     @Min(value = 1, message = "Offer id is invalid")
     private int offerId;
 
@@ -42,7 +38,6 @@ public class ApplicationPartial {
      */
     public ApplicationPartial(Application application){
         this.email = application.getEmail();
-        this.resume = application.getResume();
         this.offerId = application.getOffer().getId();
     }
 }

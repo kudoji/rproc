@@ -46,14 +46,12 @@ public class ApplicationTest {
         application1.setOffer(offer);
         application1.setEmail(email1);
         application1.setApplicationStatus(ApplicationStatus.APPLIED);
-        application1.setResume("resume1");
 
         email2 = "email2@email.com";
         application2 = new Application();
         application2.setOffer(offer);
         application2.setEmail(email2);
         application2.setApplicationStatus(ApplicationStatus.APPLIED);
-        application2.setResume("resume2");
     }
 
     @BeforeClass
@@ -220,7 +218,6 @@ public class ApplicationTest {
         Application application = new Application();
         application.setOffer(offer);
         application.setEmail("email@mail.com");
-        application.setResume("resume text");
 
         assertEquals(0, application.getApplicationStatusHistories().size());
         testEntityManager.persistAndFlush(offer);

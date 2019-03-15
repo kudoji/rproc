@@ -83,7 +83,6 @@ public class ApplicationControllerTest {
 
         Application application = new Application();
         application.setId(1);
-        application.setResume("resume1");
         application.setEmail("email1@email.com");
         application.setOffer(offer);
         application.setApplicationStatus(ApplicationStatus.APPLIED);
@@ -92,7 +91,6 @@ public class ApplicationControllerTest {
 
         application = new Application();
         application.setId(2);
-        application.setResume("resume2");
         application.setEmail("email2@email.com");
         application.setOffer(offer);
         application.setApplicationStatus(ApplicationStatus.APPLIED);
@@ -101,7 +99,6 @@ public class ApplicationControllerTest {
 
         application = new Application();
         application.setId(2);
-        application.setResume("resume2");
         application.setEmail("email2@email.com");
         application.setOffer(offer2);
         application.setApplicationStatus(ApplicationStatus.APPLIED);
@@ -310,7 +307,6 @@ public class ApplicationControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id", is(application.getId())))
                 .andExpect(jsonPath("$.email", is(application.getEmail())))
-                .andExpect(jsonPath("$.resume", is(application.getResume())))
                 .andExpect(jsonPath("$.applicationStatus", is(application.getApplicationStatus().toString())));
 
     }
@@ -384,7 +380,6 @@ public class ApplicationControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(header().string("Location", is(createdLink)))
                 .andExpect(jsonPath("$.email", is(application.getEmail())))
-                .andExpect(jsonPath("$.resume", is(application.getResume())))
                 .andExpect(jsonPath("$._links.self.href", is(createdLink)));
     }
 

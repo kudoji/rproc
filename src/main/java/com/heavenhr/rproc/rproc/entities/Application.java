@@ -18,6 +18,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
 @Relation(value = "application", collectionRelation = "applications")
@@ -39,9 +40,16 @@ public class Application {
     @Column(nullable = false)
     private String email;
 
-    //TODO make it as a file link
-    @NotBlank(message = "Resume cannot be empty")
-    private String resume;
+    /**
+     * link to a uploaded resume file
+     */
+    @JsonIgnore
+    private String resumeFile;
+
+    /**
+     * Used to generate resume upload file link
+     */
+    private UUID uploadHash = UUID.randomUUID();
 
 //    @NotNull(message = "Application status cannot be empty")
     @Enumerated
@@ -64,7 +72,6 @@ public class Application {
      */
     public Application(ApplicationPartial applicationPartial){
         this.email = applicationPartial.getEmail();
-        this.resume = applicationPartial.getResume();
     }
     /**
      *
@@ -168,6 +175,10 @@ public class Application {
         //  status is not set, thus, it needs do be set to applied by default
         if (this.applicationStatus == null){
             setApplicationStatus(ApplicationStatus.APPLIED);
+        }
+
+        if (uploadHash == null){
+            uploadHash = UUID.randomUUID();
         }
     }
 

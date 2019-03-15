@@ -208,7 +208,6 @@ the following structure:
 
     {
         "email": "email1@email.com",
-        "resume": "resume text",
         "offerId": [offerId]
     }
 
@@ -222,15 +221,18 @@ Possible responses are:
         "id": 1,
         "email": "email1@email.com",
         "resume": "resume text",
-        "applicationStatus": "INVITED",
+        "applicationStatus": "APPLIED",
         "_links":{
             "self":{
                 "href": "[host]/applications/1"
+            },
+            "upload":{
+                "href":"http://[host]/applications/1/3662a6fe-a039-462f-b8bd-9ca1cc06ab78"
             }
         }
     }
 
-in case of successful application creation;
+in case of successful application creation, where "upload" contains a link to resume file upload form with "resume" file upload element name;
 
     400  Bad Request
 

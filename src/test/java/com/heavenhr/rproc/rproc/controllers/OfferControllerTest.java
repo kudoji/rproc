@@ -80,7 +80,6 @@ public class OfferControllerTest {
         application.setOffer(offer);
         application.setApplicationStatus(ApplicationStatus.APPLIED);
         application.setEmail("email@email.com");
-        application.setResume("resume");
 
         offer2 = new Offer();
         offer2.setId(2);

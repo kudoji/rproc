@@ -35,7 +35,6 @@ public class ApplicationStatusHistoryTest {
         application.setOffer(offer);
         application.setEmail(email);
         application.setApplicationStatus(ApplicationStatus.APPLIED);
-        application.setResume("resume1");
     }
 
     @Test

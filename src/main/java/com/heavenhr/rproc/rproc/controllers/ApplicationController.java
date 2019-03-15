@@ -9,21 +9,23 @@ import com.heavenhr.rproc.rproc.entities.Offer;
 import com.heavenhr.rproc.rproc.enums.ApplicationStatus;
 import com.heavenhr.rproc.rproc.exceptions.ApplicationAlreadySubmittedException;
 import com.heavenhr.rproc.rproc.exceptions.ApplicationNotFoundException;
+import com.heavenhr.rproc.rproc.exceptions.ApplicationResumeAlreadySubmittedException;
 import com.heavenhr.rproc.rproc.exceptions.OfferNotFoundException;
 import com.heavenhr.rproc.rproc.messaging.RabbitNotificationService;
 import com.heavenhr.rproc.rproc.recourseassemblers.ApplicationResourceAssembler;
 import com.heavenhr.rproc.rproc.repositories.ApplicationRepository;
 import com.heavenhr.rproc.rproc.repositories.OfferRepository;
+import com.heavenhr.rproc.rproc.storage.StorageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.AmqpException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.hateoas.Resource;
 import org.springframework.hateoas.Resources;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.validation.Valid;
 import java.net.URI;
@@ -47,18 +49,21 @@ public class ApplicationController {
     private final ApplicationResourceAssembler applicationResourceAssembler;
     private final OfferRepository offerRepository;
     private final RabbitNotificationService rabbitNotificationService;
+    private final StorageService storageService;
 
     @Autowired
     public ApplicationController(
             ApplicationRepository applicationRepository,
             ApplicationResourceAssembler applicationResourceAssembler,
             OfferRepository offerRepository,
-            RabbitNotificationService rabbitNotificationService
+            RabbitNotificationService rabbitNotificationService,
+            StorageService storageService
     ){
         this.applicationRepository = applicationRepository;
         this.applicationResourceAssembler = applicationResourceAssembler;
         this.offerRepository = offerRepository;
         this.rabbitNotificationService = rabbitNotificationService;
+        this.storageService = storageService;
     }
 
     /**
@@ -162,10 +167,42 @@ public class ApplicationController {
         }
 
         Resource<Application> resource = applicationResourceAssembler.toResource(application);
+        resource.add(linkTo(methodOn(ApplicationController.class).getApplication(application.getId()))
+                .slash(application.getUploadHash())
+                .withRel("upload"));
 
         return ResponseEntity
                 .created(new URI(resource.getId().getHref()))
                 .body(resource);
+    }
+
+    @PostMapping(path = "/{appId:[\\d]+}/{hashCode}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> submitResumeFile(
+            @PathVariable(value = "appId") int appId,
+            @PathVariable(value = "hashCode") String hashCode,
+            @RequestParam(value = "resume") MultipartFile resumeFile){
+
+        Application application = applicationRepository
+                .findById(appId)
+                .orElseThrow(() -> new ApplicationNotFoundException(appId));
+
+        if (application.getResumeFile() != null && !application.getResumeFile().isEmpty()){
+            //  file is already uploaded, reject any further uploads
+            throw new ApplicationResumeAlreadySubmittedException(appId);
+        }
+
+        if (application.getUploadHash() == null){
+            //  should not be like that
+            throw new ApplicationNotFoundException(appId);
+        }
+
+        if (!application.getUploadHash().toString().equals(hashCode)){
+            throw new ApplicationNotFoundException(appId);
+        }
+
+        storageService.store(resumeFile);
+
+        return ResponseEntity.ok(new HashMap<String, String>(){{put("status", "uploaded");}});
     }
 
     /**

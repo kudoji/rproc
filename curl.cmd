@@ -36,11 +36,16 @@ curl --cookie cookie.jar --request GET http://localhost:8080/applications/1
 
 #   create an application
 #   invalid
-curl --cookie cookie.jar --header "Content-Type: application/json" --request POST --data '{"email":"","resume":""}' http://localhost:8080/applications
+curl --cookie cookie.jar --header "Content-Type: application/json" --request POST --data '{"email":""}' http://localhost:8080/applications
 #   invalid
-curl --cookie cookie.jar --header "Content-Type: application/json" --request POST --data '{"email":"email@email.com","resume":""}' http://localhost:8080/applications
+curl --cookie cookie.jar --header "Content-Type: application/json" --request POST --data '{"email":"email@email.com"}' http://localhost:8080/applications
 #   valid
-curl --cookie cookie.jar --header "Content-Type: application/json" --request POST --data '{"email":"email1@email.com","resume":"resume text", "offerId": 1}' http://localhost:8080/applications
+curl --cookie cookie.jar --header "Content-Type: application/json" --request POST --data '{"email":"email1@email.com", "offerId": 1}' http://localhost:8080/applications
+
+#   upload resume file
+
+#   valid
+curl --cookie cookie.jar --request POST --form 'resume=@progress.db' http://localhost:8080/applications/8/3662a6fe-a039-462f-b8bd-9ca1cc06ab78
 
 #   progress application's status
 curl --cookie cookie.jar --header "Content-Type: application/json" --request PATCH --data '{"applicationStatus":"INVITED"}' http://localhost:8080/applications/1/status
