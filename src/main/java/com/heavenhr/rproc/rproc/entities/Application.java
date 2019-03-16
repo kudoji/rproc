@@ -10,6 +10,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.hateoas.core.Relation;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
@@ -17,8 +18,10 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Slf4j
+@Relation(value = "application", collectionRelation = "applications")
 @Data
 @NoArgsConstructor(access = AccessLevel.PUBLIC)
 @Entity
@@ -37,14 +40,22 @@ public class Application {
     @Column(nullable = false)
     private String email;
 
-    //TODO make it as a file link
-    @NotBlank(message = "Resume cannot be empty")
-    private String resume;
+    /**
+     * link to a uploaded resume file
+     */
+    @JsonIgnore
+    private String resumeFile;
+
+    /**
+     * Used to generate resume upload file link
+     */
+    private UUID uploadHash = UUID.randomUUID();
 
 //    @NotNull(message = "Application status cannot be empty")
     @Enumerated
     private ApplicationStatus applicationStatus;
 
+    @JsonIgnore
     @NotNull(message = "Offer must be selected")
     @ManyToOne(fetch = FetchType.LAZY)
     private Offer offer;
@@ -61,7 +72,6 @@ public class Application {
      */
     public Application(ApplicationPartial applicationPartial){
         this.email = applicationPartial.getEmail();
-        this.resume = applicationPartial.getResume();
     }
     /**
      *
@@ -165,6 +175,10 @@ public class Application {
         //  status is not set, thus, it needs do be set to applied by default
         if (this.applicationStatus == null){
             setApplicationStatus(ApplicationStatus.APPLIED);
+        }
+
+        if (uploadHash == null){
+            uploadHash = UUID.randomUUID();
         }
     }
 

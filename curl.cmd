@@ -1,27 +1,51 @@
 # list of useful curl commands
 
+#   logging in
+curl --verbose --request POST --data 'username=hr&password=hr' --cookie-jar cookie.jar http://localhost:8080/login
+
+#   check that use are successfully logged in
+curl --request GET --cookie cookie.jar http://localhost:8080/offers
+
+#   offers backpoints
+
+#   list all offers
+curl --request GET --cookie cookie.jar http://localhost:8080/offers
+
+#   read a single offer
+curl --request GET --cookie cookie.jar http://localhost:8080/offers/1
+
 # create an offer
-curl --verbose --header "Content-Type: application/json" --request POST --data '{"jobTitle":"a job title","startDate":"2019-01-19"}' http://localhost:8080/offers/
-curl --header "Content-Type: application/json" --request GET http://localhost:8080/offers/1
+curl --verbose --cookie cookie.jar --header "Content-Type: application/json" --request POST --data '{"jobTitle":"a job title","startDate":"2019-01-19"}' http://localhost:8080/offers
 
-# create an application
-# invalid
-curl --header "Content-Type: application/json" --request POST --data '{"email":"","resume":""}' http://localhost:8080/offers/1
-# invalid
-curl --header "Content-Type: application/json" --request POST --data '{"email":"email@email.com","resume":""}' http://localhost:8080/offers/1
-# valid
-curl --header "Content-Type: application/json" --request POST --data '{"email":"email1@email.com","resume":"resume text"}' http://localhost:8080/offers/1
+#   applications backpoints
 
-# read a single application
-curl --header "Content-Type: application/json" --request GET http://localhost:8080/offers/1/1
-# get all applications
-curl --header "Content-Type: application/json" --request GET http://localhost:8080/offers/1/all
+#   get list of all applications
+curl --request GET --cookie cookie.jar http://localhost:8080/applications
 
-# get total number of applications
-curl --header "Content-Type: application/json" --request GET http://localhost:8080/offers/apps_total
+#   get list of all applications for an offer
+curl --request GET --cookie cookie.jar http://localhost:8080/applications?offerId=1
 
-# get total number of applications for offer 1
-curl --header "Content-Type: application/json" --request GET http://localhost:8080/offers/1/apps_total
+#   get total number of applications
+curl --cookie cookie.jar --request GET http://localhost:8080/applications/total
 
-# application status progress
-curl --header "Content-Type: application/json" --request PATCH --data '{"applicationStatus":"INVITED"}' http://localhost:8080/offers/app/1
+#   get total number of applications for an offer
+curl --cookie cookie.jar --request GET http://localhost:8080/applications/total?offerId=1
+
+#   read a single application
+curl --cookie cookie.jar --request GET http://localhost:8080/applications/1
+
+#   create an application
+#   invalid
+curl --cookie cookie.jar --header "Content-Type: application/json" --request POST --data '{"email":""}' http://localhost:8080/applications
+#   invalid
+curl --cookie cookie.jar --header "Content-Type: application/json" --request POST --data '{"email":"email@email.com"}' http://localhost:8080/applications
+#   valid
+curl --cookie cookie.jar --header "Content-Type: application/json" --request POST --data '{"email":"email1@email.com", "offerId": 1}' http://localhost:8080/applications
+
+#   upload resume file
+
+#   valid
+curl --cookie cookie.jar --request POST --form 'resume=@progress.db' http://localhost:8080/applications/8/3662a6fe-a039-462f-b8bd-9ca1cc06ab78
+
+#   progress application's status
+curl --cookie cookie.jar --header "Content-Type: application/json" --request PATCH --data '{"applicationStatus":"INVITED"}' http://localhost:8080/applications/1/status

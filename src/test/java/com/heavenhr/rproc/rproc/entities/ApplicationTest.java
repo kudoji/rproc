@@ -5,6 +5,7 @@ package com.heavenhr.rproc.rproc.entities;
 
 import com.heavenhr.rproc.rproc.enums.ApplicationStatus;
 import com.heavenhr.rproc.rproc.repositories.ApplicationRepository;
+import com.heavenhr.rproc.rproc.storage.StorageService;
 import com.heavenhr.rproc.rproc.testutils.AssertValidation;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -12,6 +13,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.validation.Validation;
@@ -32,6 +34,9 @@ public class ApplicationTest {
     @Autowired
     private ApplicationRepository applicationRepository;
 
+    @MockBean
+    private StorageService storageService;
+
     private static AssertValidation<Application> assertValidation;
     private Offer offer;
     private Application application1, application2;
@@ -46,14 +51,12 @@ public class ApplicationTest {
         application1.setOffer(offer);
         application1.setEmail(email1);
         application1.setApplicationStatus(ApplicationStatus.APPLIED);
-        application1.setResume("resume1");
 
         email2 = "email2@email.com";
         application2 = new Application();
         application2.setOffer(offer);
         application2.setEmail(email2);
         application2.setApplicationStatus(ApplicationStatus.APPLIED);
-        application2.setResume("resume2");
     }
 
     @BeforeClass
@@ -220,7 +223,6 @@ public class ApplicationTest {
         Application application = new Application();
         application.setOffer(offer);
         application.setEmail("email@mail.com");
-        application.setResume("resume text");
 
         assertEquals(0, application.getApplicationStatusHistories().size());
         testEntityManager.persistAndFlush(offer);
