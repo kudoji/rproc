@@ -4,12 +4,14 @@
 package com.heavenhr.rproc.rproc.entities;
 
 import com.heavenhr.rproc.rproc.enums.ApplicationStatus;
+import com.heavenhr.rproc.rproc.storage.StorageService;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import static junit.framework.TestCase.assertEquals;
@@ -21,6 +23,9 @@ import static org.junit.Assert.assertTrue;
 public class ApplicationStatusHistoryTest {
     @Autowired
     private TestEntityManager testEntityManager;
+
+    @MockBean
+    private StorageService storageService;
 
     private Offer offer;
     private Application application;

@@ -12,6 +12,7 @@ import com.heavenhr.rproc.rproc.messaging.RabbitNotificationService;
 import com.heavenhr.rproc.rproc.recourseassemblers.ApplicationResourceAssembler;
 import com.heavenhr.rproc.rproc.repositories.ApplicationRepository;
 import com.heavenhr.rproc.rproc.repositories.OfferRepository;
+import com.heavenhr.rproc.rproc.storage.StorageService;
 import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,9 +23,11 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.hateoas.Link;
 import org.springframework.hateoas.Resource;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -54,6 +57,9 @@ public class ApplicationControllerTest {
 
     @MockBean
     private RabbitNotificationService rabbitNotificationService;
+
+    @MockBean
+    private StorageService storageService;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -380,7 +386,97 @@ public class ApplicationControllerTest {
                 .andExpect(status().isCreated())
                 .andExpect(header().string("Location", is(createdLink)))
                 .andExpect(jsonPath("$.email", is(application.getEmail())))
-                .andExpect(jsonPath("$._links.self.href", is(createdLink)));
+                .andExpect(jsonPath("$._links.self.href", is(createdLink)))
+                .andExpect(jsonPath("$._links.upload").exists());
+    }
+
+    @Test
+    public void submitResumeFile_withUnauthorizedUser() throws Exception{
+        Application application = applications.get(0);
+        mockMvc.perform(
+                post("/applications/" + application.getId() + "/" + application.getUploadHash())
+                        .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
+        )
+                .andExpect(status().is3xxRedirection())
+                .andExpect(header().string("Location", containsString("/login")));
+    }
+
+    @WithMockUser(username = "hr")
+    @Test
+    public void submitResumeFile_withNoResumeFile() throws Exception{
+        Application application = applications.get(0);
+
+        mockMvc.perform(
+                post("/applications/" + application.getId() + "/" + application.getUploadHash())
+                        .contentType(MediaType.MULTIPART_FORM_DATA_VALUE)
+        )
+                .andExpect(status().is5xxServerError())
+                .andExpect(jsonPath("$.errorMessage", containsString("Required request part 'resume' is not present")));
+    }
+
+    @WithMockUser(username = "hr")
+    @Test
+    public void submitResumeFile_withInvalidApplicationId() throws Exception{
+        Application application = applications.get(0);
+        when(applicationRepository.findById(application.getId())).thenReturn(Optional.empty());
+
+        MockMultipartFile resume = new MockMultipartFile("resume", "resume.pdf", "", "resume data".getBytes());
+
+        mockMvc.perform(
+                MockMvcRequestBuilders
+                    .multipart("/applications/" + application.getId() + "/" + application.getUploadHash())
+                    .file(resume))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorMessage", containsString("Error: application with #")));
+    }
+
+    @WithMockUser(username = "hr")
+    @Test
+    public void submitResumeFile_withApplicationWithResume() throws Exception{
+        Application application = applications.get(0);
+        application.setResumeFile("resume.pdf");
+        when(applicationRepository.findById(application.getId())).thenReturn(Optional.of(application));
+
+        MockMultipartFile resume = new MockMultipartFile("resume", "resume.pdf", "", "resume data".getBytes());
+
+        mockMvc.perform(
+                MockMvcRequestBuilders
+                        .multipart("/applications/" + application.getId() + "/" + application.getUploadHash())
+                        .file(resume))
+                .andExpect(status().is5xxServerError())
+                .andExpect(jsonPath("$.errorMessage", containsString("resume file is already uploaded for the application #")));
+    }
+
+    @WithMockUser(username = "hr")
+    @Test
+    public void submitResumeFile_withInvalidUploadHash() throws Exception{
+        Application application = applications.get(0);
+        when(applicationRepository.findById(application.getId())).thenReturn(Optional.empty());
+
+        MockMultipartFile resume = new MockMultipartFile("resume", "resume.pdf", "", "resume data".getBytes());
+
+        mockMvc.perform(
+                MockMvcRequestBuilders
+                        .multipart("/applications/" + application.getId() + "/" + applications.get(1).getUploadHash())
+                        .file(resume))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorMessage", containsString("Error: application with #")));
+    }
+
+    @WithMockUser(username = "hr")
+    @Test
+    public void submitResumeFile_withValidData() throws Exception{
+        Application application = applications.get(0);
+        when(applicationRepository.findById(application.getId())).thenReturn(Optional.of(application));
+
+        MockMultipartFile resume = new MockMultipartFile("resume", "resume.pdf", "", "resume data".getBytes());
+
+        mockMvc.perform(
+                MockMvcRequestBuilders
+                        .multipart("/applications/" + application.getId() + "/" + application.getUploadHash())
+                        .file(resume))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status", containsString("uploaded")));
     }
 
     @Test

@@ -5,6 +5,7 @@ package com.heavenhr.rproc.rproc.entities;
 
 import com.heavenhr.rproc.rproc.enums.ApplicationStatus;
 import com.heavenhr.rproc.rproc.repositories.ApplicationRepository;
+import com.heavenhr.rproc.rproc.storage.StorageService;
 import com.heavenhr.rproc.rproc.testutils.AssertValidation;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -12,6 +13,7 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import javax.validation.Validation;
@@ -31,6 +33,9 @@ public class ApplicationTest {
 
     @Autowired
     private ApplicationRepository applicationRepository;
+
+    @MockBean
+    private StorageService storageService;
 
     private static AssertValidation<Application> assertValidation;
     private Offer offer;

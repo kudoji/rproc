@@ -12,9 +12,11 @@ import com.heavenhr.rproc.rproc.recourseassemblers.ApplicationResourceAssembler;
 import com.heavenhr.rproc.rproc.recourseassemblers.OfferResourceAssembler;
 import com.heavenhr.rproc.rproc.repositories.ApplicationRepository;
 import com.heavenhr.rproc.rproc.repositories.OfferRepository;
+import com.heavenhr.rproc.rproc.storage.StorageService;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -57,6 +59,9 @@ public class OfferControllerTest {
 
     @MockBean
     private ApplicationResourceAssembler applicationResourceAssembler;
+
+    @MockBean
+    private StorageService storageService;
 
     @Autowired
     private ObjectMapper objectMapper;
